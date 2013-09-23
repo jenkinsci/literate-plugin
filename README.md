@@ -173,6 +173,12 @@ be used. So for example instead of `.jenkins/junit.lst` we could have created a
     
 If you provide both forms one will get picked up and the other ignored, so don't be silly.
 
+The plugin adds an `Export as literate-style` action to Free-style projects that lets you
+select the Publishers/Notifiers to export and creates a `.zip` file to download with
+the `.jenkins` directory containing the equivalent Literate-style configuration, so if you
+have a Jenkins job that has Publishers/Notifiers very close to the way you want them it should
+be easy to grab their configuration.
+
 See also this [plugin's wiki page][wiki]
 
 # Environment
