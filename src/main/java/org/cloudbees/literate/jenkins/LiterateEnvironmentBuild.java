@@ -23,6 +23,7 @@
  */
 package org.cloudbees.literate.jenkins;
 
+import hudson.AbortException;
 import hudson.EnvVars;
 import hudson.FilePath;
 import hudson.Launcher;
@@ -196,80 +197,6 @@ public class LiterateEnvironmentBuild extends Build<LiterateEnvironmentProject, 
         private List<Publisher> publishers = new ArrayList<Publisher>();
 
         /**
-         * Fix CR/LF and always make it Unix style.
-         */
-        private String fixCrLf(String s) {
-            // eliminate CR
-            int idx;
-            while ((idx = s.indexOf("\r\n")) != -1) {
-                s = s.substring(0, idx) + s.substring(idx + 1);
-            }
-
-            //// add CR back if this is for Windows
-            //if(isWindows()) {
-            //    idx=0;
-            //    while(true) {
-            //        idx = s.indexOf('\n',idx);
-            //        if(idx==-1) break;
-            //        s = s.substring(0,idx)+'\r'+s.substring(idx);
-            //        idx+=2;
-            //    }
-            //}
-            return s;
-        }
-
-        /**
-         * Older versions of bash have a bug where non-ASCII on the first line
-         * makes the shell think the file is a binary file and not a script. Adding
-         * a leading line feed works around this problem.
-         */
-        private String addCrForNonASCII(String s) {
-            if (!s.startsWith("#!")) {
-                if (s.indexOf('\n') != 0) {
-                    return "\n" + s;
-                }
-            }
-
-            return s;
-        }
-
-        public String[] buildCommandLine(FilePath script, String command) {
-            if (command.startsWith("#!")) {
-                // interpreter override
-                int end = command.indexOf('\n');
-                if (end < 0) {
-                    end = command.length();
-                }
-                List<String> args = new ArrayList<String>();
-                args.addAll(Arrays.asList(Util.tokenize(command.substring(0, end).trim())));
-                args.add(script.getRemote());
-                args.set(0, args.get(0).substring(2));   // trim off "#!"
-                return args.toArray(new String[args.size()]);
-            } else {
-                return new String[]{
-                        Jenkins.getInstance().getDescriptorByType(
-                                Shell.DescriptorImpl.class).getShellOrDefault(
-                                script.getChannel()), "-xe", script.getRemote()
-                };
-            }
-        }
-
-        protected String getContents(String command) {
-            return addCrForNonASCII(fixCrLf(command));
-        }
-
-        protected String getFileExtension() {
-            return ".sh";
-        }
-
-        /**
-         * Creates a script file in a temporary name in the specified directory.
-         */
-        public FilePath createScriptFile(FilePath dir, String command) throws IOException, InterruptedException {
-            return dir.createTextTempFile("jenkins", getFileExtension(), getContents(command), false);
-        }
-
-        /**
          * {@inheritDoc}
          */
         @Override
@@ -378,45 +305,19 @@ public class LiterateEnvironmentBuild extends Build<LiterateEnvironmentProject, 
                 installation = installation.translate(LiterateEnvironmentBuild.this, listener);
                 installation.buildEnvVars(envVars);
             }
-            SortedSet<String> components = buildEnvironment.getComponents();
-            String command = model.getBuildFor(new ExecutionEnvironment(components));
-            if (command == null) {
-                listener.getLogger().println(Messages.LiterateEnvironmentBuild_CommandMissing(components));
-                return Result.FAILURE;
-            }
-            FilePath script = null;
             try {
-                try {
-                    script = createScriptFile(ws, command);
-                } catch (IOException e) {
-                    Util.displayIOException(e, listener);
-                    e.printStackTrace(
-                            listener.fatalError(hudson.tasks.Messages.CommandInterpreter_UnableToProduceScript()));
-                    return Result.FAILURE;
-                }
-
-                int r;
-                try {
-                    // TODO windows support
-                    r = launcher.launch().cmds(buildCommandLine(script, command)).envs(envVars).stdout(listener).pwd(ws)
-                            .join();
-                } catch (IOException e) {
-                    Util.displayIOException(e, listener);
-                    e.printStackTrace(
-                            listener.fatalError(hudson.tasks.Messages.CommandInterpreter_CommandFailed()));
-                    r = -1;
-                }
-                return r == 0 ? Result.SUCCESS : Result.FAILURE;
-            } finally {
-                try {
-                    if (script != null) {
-                        script.delete();
-                    }
-                } catch (IOException e) {
-                    Util.displayIOException(e, listener);
-                    e.printStackTrace(
-                            listener.fatalError(hudson.tasks.Messages.CommandInterpreter_UnableToDelete(script)));
-                }
+                return LiterateBuilder.perform(
+                        (AbstractBuild)getBuild(),
+                        launcher,
+                        listener,
+                        envVars,
+                        model,
+                        new ExecutionEnvironment(buildEnvironment.getComponents())
+                ) ? Result.SUCCESS : Result.FAILURE;
+            } catch (AbortException e) {
+                e.printStackTrace(
+                        listener.fatalError(hudson.tasks.Messages.CommandInterpreter_CommandFailed()));
+                return Result.FAILURE;
             }
         }
 
