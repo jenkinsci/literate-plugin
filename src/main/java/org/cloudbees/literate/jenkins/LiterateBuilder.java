@@ -121,6 +121,7 @@ public class LiterateBuilder extends Builder {
     public boolean perform(AbstractBuild<?, ?> build, Launcher launcher, BuildListener listener)
             throws InterruptedException, IOException {
         FilePath ws = build.getWorkspace();
+        assert ws != null : "This method is called from a build, so must have a workspace";
         final FilePathRepository repo = new FilePathRepository(ws);
         ProjectModel model;
         try {
@@ -159,7 +160,9 @@ public class LiterateBuilder extends Builder {
 
         FilePath script = null;
         try {
-            script = build.getWorkspace().createTextTempFile("jenkins", extension, contents, false);
+            FilePath ws = build.getWorkspace();
+            assert ws != null : "This method is called from a build, so must have a workspace";
+            script = ws.createTextTempFile("jenkins", extension, contents, false);
 
             String[] commandLine;
             if (launcher.isUnix()) {
@@ -179,7 +182,7 @@ public class LiterateBuilder extends Builder {
                             Jenkins.getInstance().getDescriptorByType(Shell.DescriptorImpl.class);
                     commandLine =
                             new String[]{
-                                    shellDescriptor.getShellOrDefault(build.getWorkspace().getChannel()),
+                                    shellDescriptor.getShellOrDefault(ws.getChannel()),
                                     "-xe",
                                     script.getRemote()
                             };
@@ -201,7 +204,7 @@ public class LiterateBuilder extends Builder {
                     envVars.put(e.getKey(), e.getValue());
                 }
 
-                r = launcher.launch().cmds(commandLine).envs(envVars).stdout(listener).pwd(build.getWorkspace()).join();
+                r = launcher.launch().cmds(commandLine).envs(envVars).stdout(listener).pwd(ws).join();
             } catch (IOException e) {
                 Util.displayIOException(e, listener);
                 e.printStackTrace(listener.fatalError(hudson.tasks.Messages.CommandInterpreter_CommandFailed()));
