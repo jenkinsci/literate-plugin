@@ -88,7 +88,7 @@ public class MigrateFreeStyleAction implements Action {
      */
     @NonNull
     public String getIconFileName(String size) {
-        return "/plugin/cloudbees-multibranch-plugin/images/" + size + "/literate-export.png";
+        return "/plugin/literate/images/" + size + "/literate-export.png";
     }
 
     /**
