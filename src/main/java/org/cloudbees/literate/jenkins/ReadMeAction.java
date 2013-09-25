@@ -76,7 +76,7 @@ public class ReadMeAction implements Action, Serializable {
      */
     @NonNull
     public String getIconFileName(String size) {
-        return "/plugin/cloudbees-multibranch-plugin/images/" + size + "/literate.png";
+        return "/plugin/literate/images/" + size + "/literate.png";
     }
 
     /**
