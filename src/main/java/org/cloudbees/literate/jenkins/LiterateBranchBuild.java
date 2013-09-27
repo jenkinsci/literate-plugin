@@ -240,6 +240,10 @@ public class LiterateBranchBuild extends Build<LiterateBranchProject, LiterateBr
             try {
                 Result r = Result.SUCCESS;
                 for (LiterateEnvironmentProject c : configurations) {
+                    listener.getLogger()
+                            .println("Waiting for the completion of "
+                                    + ModelHyperlinkNote.encodeTo(c, c.getEnvironment().getName())
+                                    + "...");
                     LiterateEnvironmentBuild run = waitForCompletion(c);
                     Result runResult = getResult(run);
                     listener.getLogger().println(
