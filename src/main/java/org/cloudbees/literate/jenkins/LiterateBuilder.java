@@ -54,6 +54,7 @@ import java.util.TreeSet;
 
 /**
  * A builder that parses a literate build description and runs a specific execution.
+ *
  * @author Stephen Connolly
  */
 public class LiterateBuilder extends Builder {
@@ -145,84 +146,91 @@ public class LiterateBuilder extends Builder {
     public static boolean perform(AbstractBuild<?, ?> build, Launcher launcher, BuildListener listener,
                                   EnvVars envVars, ProjectModel model, ExecutionEnvironment environment)
             throws IOException, InterruptedException {
-        String command = model.getBuildFor(environment);
-        if (command == null) {
+        List<String> commands = model.getBuildFor(environment);
+        if (commands == null || commands.isEmpty()) {
             throw new AbortException("No build command defined for environment: " + environment.getLabels());
         }
 
         String extension = launcher.isUnix() ? ".sh" : ".bat";
-        String contents;
-        if (launcher.isUnix()) {
-            contents = addCrForNonASCII(fixCrLf(command, false));
-        } else {
-            contents = fixCrLf(command, true) + "\r\nexit %ERRORLEVEL%";
-        }
-
-        FilePath script = null;
-        try {
-            FilePath ws = build.getWorkspace();
-            assert ws != null : "This method is called from a build, so must have a workspace";
-            script = ws.createTextTempFile("jenkins", extension, contents, false);
-
-            String[] commandLine;
+        for (String command : commands) {
+            String contents;
             if (launcher.isUnix()) {
-                if (command.startsWith("#!")) {
-                    // interpreter override
-                    int end = command.indexOf('\n');
-                    if (end < 0) {
-                        end = command.length();
-                    }
-                    List<String> args = new ArrayList<String>();
-                    args.addAll(Arrays.asList(Util.tokenize(command.substring(0, end).trim())));
-                    args.add(script.getRemote());
-                    args.set(0, args.get(0).substring(2));   // trim off "#!"
-                    commandLine = args.toArray(new String[args.size()]);
-                } else {
-                    Shell.DescriptorImpl shellDescriptor =
-                            Jenkins.getInstance().getDescriptorByType(Shell.DescriptorImpl.class);
-                    commandLine =
-                            new String[]{
-                                    shellDescriptor.getShellOrDefault(ws.getChannel()),
-                                    "-xe",
-                                    script.getRemote()
-                            };
-                }
+                contents = addCrForNonASCII(fixCrLf(command, false));
             } else {
-                commandLine = new String[]{
-                        "cmd",
-                        "/c",
-                        "call",
-                        script.getRemote()
-                };
+                contents = fixCrLf(command, true) + "\r\nexit %ERRORLEVEL%";
             }
-            int r;
-            try {
-                // on Windows environment variables are converted to all upper case,
-                // but no such conversions are done on Unix, so to make this cross-platform,
-                // convert variables to all upper cases.
-                for (Map.Entry<String, String> e : build.getBuildVariables().entrySet()) {
-                    envVars.put(e.getKey(), e.getValue());
-                }
 
-                r = launcher.launch().cmds(commandLine).envs(envVars).stdout(listener).pwd(ws).join();
-            } catch (IOException e) {
-                Util.displayIOException(e, listener);
-                e.printStackTrace(listener.fatalError(hudson.tasks.Messages.CommandInterpreter_CommandFailed()));
-                r = -1;
-            }
-            return r == 0;
-        } finally {
+            FilePath script = null;
             try {
-                if (script != null) {
-                    script.delete();
+                FilePath ws = build.getWorkspace();
+                assert ws != null : "This method is called from a build, so must have a workspace";
+                script = ws.createTextTempFile("jenkins", extension, contents, false);
+
+                String[] commandLine;
+                if (launcher.isUnix()) {
+                    if (command.startsWith("#!")) {
+                        // interpreter override
+                        int end = command.indexOf('\n');
+                        if (end < 0) {
+                            end = command.length();
+                        }
+                        List<String> args = new ArrayList<String>();
+                        args.addAll(Arrays.asList(Util.tokenize(command.substring(0, end).trim())));
+                        args.add(script.getRemote());
+                        args.set(0, args.get(0).substring(2));   // trim off "#!"
+                        commandLine = args.toArray(new String[args.size()]);
+                    } else {
+                        Shell.DescriptorImpl shellDescriptor =
+                                Jenkins.getInstance().getDescriptorByType(Shell.DescriptorImpl.class);
+                        commandLine =
+                                new String[]{
+                                        shellDescriptor.getShellOrDefault(ws.getChannel()),
+                                        "-xe",
+                                        script.getRemote()
+                                };
+                    }
+                } else {
+                    commandLine = new String[]{
+                            "cmd",
+                            "/c",
+                            "call",
+                            script.getRemote()
+                    };
                 }
-            } catch (IOException e) {
-                Util.displayIOException(e, listener);
-                e.printStackTrace(listener.fatalError(hudson.tasks.Messages.CommandInterpreter_UnableToDelete(script)));
-            } catch (Exception e) {
-                e.printStackTrace(listener.fatalError(hudson.tasks.Messages.CommandInterpreter_UnableToDelete(script)));
+                int r;
+                try {
+                    // on Windows environment variables are converted to all upper case,
+                    // but no such conversions are done on Unix, so to make this cross-platform,
+                    // convert variables to all upper cases.
+                    for (Map.Entry<String, String> e : build.getBuildVariables().entrySet()) {
+                        envVars.put(e.getKey(), e.getValue());
+                    }
+
+                    r = launcher.launch().cmds(commandLine).envs(envVars).stdout(listener).pwd(ws).join();
+                } catch (IOException e) {
+                    Util.displayIOException(e, listener);
+                    e.printStackTrace(listener.fatalError(hudson.tasks.Messages.CommandInterpreter_CommandFailed()));
+                    r = -1;
+                }
+                if (r != 0) {
+                    return false;
+                }
+            } finally {
+                try {
+                    if (script != null) {
+                        script.delete();
+                    }
+                } catch (IOException e) {
+                    Util.displayIOException(e, listener);
+                    e.printStackTrace(
+                            listener.fatalError(hudson.tasks.Messages.CommandInterpreter_UnableToDelete(script)));
+                } catch (Exception e) {
+                    e.printStackTrace(
+                            listener.fatalError(hudson.tasks.Messages.CommandInterpreter_UnableToDelete(script)));
+                }
             }
         }
+        return true;
     }
 
     @Extension
