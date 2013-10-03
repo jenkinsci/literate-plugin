@@ -33,7 +33,7 @@
   </parent>
 
   <artifactId>literate</artifactId>
-  <version>0.1-SNAPSHOT</version>
+  <version>0.1-beta-2</version>
   <packaging>hpi</packaging>
 
   <name>Literate Plugin</name>
@@ -64,7 +64,7 @@
     <connection>scm:git:git://github.com/jenkinsci/literate-plugin.git</connection>
     <developerConnection>scm:git:git@github.com:jenkinsci/literate-plugin.git</developerConnection>
     <url>http://github.com/jenkinsci/literate-plugin</url>
-    <tag>HEAD</tag>
+    <tag>literate-0.1-beta-2</tag>
   </scm>
 
   <properties>
