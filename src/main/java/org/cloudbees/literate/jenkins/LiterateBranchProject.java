@@ -455,7 +455,7 @@ public class LiterateBranchProject extends Project<LiterateBranchProject, Litera
             context = getLastBuild();
         }
         Iterable<BuildEnvironment> activeBuildEnvironments;
-        if (context != null && context.getBuildEnvironments() != null) {
+        if (context != null) {
             activeBuildEnvironments = context.getBuildEnvironments();
         } else {
             activeBuildEnvironments = Collections.emptyList();
@@ -467,10 +467,13 @@ public class LiterateBranchProject extends Project<LiterateBranchProject, Litera
             LiterateEnvironmentProject config = this.environments.get(buildEnv);
             if (config == null) {
                 // todo LOGGER.fine("Adding configuration: " + env);
-                config = new LiterateEnvironmentProject(this, buildEnv);
+                config = branch.configureJob(new LiterateEnvironmentProject(this, buildEnv));
                 config.onCreatedFromScratch();
                 config.save();
                 this.environments.put(buildEnv, config);
+            } else {
+                branch.configureJob(config);
+                config.save();
             }
         }
         this.activeEnvironments = activeEnvironments;
@@ -491,7 +494,7 @@ public class LiterateBranchProject extends Project<LiterateBranchProject, Litera
             LiterateEnvironmentProject config = this.environments.get(buildEnv);
             if (config == null) {
                 // todo LOGGER.fine("Adding configuration: " + env);
-                config = new LiterateEnvironmentProject(this, buildEnv);
+                config = branch.configureJob(new LiterateEnvironmentProject(this, buildEnv));
                 config.onCreatedFromScratch();
                 config.save();
                 this.environments.put(buildEnv, config);
