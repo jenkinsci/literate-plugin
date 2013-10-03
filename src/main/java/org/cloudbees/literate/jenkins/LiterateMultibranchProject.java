@@ -253,7 +253,7 @@ public class LiterateMultibranchProject extends
          */
         @Override
         public LiterateBranchProject newInstance(final Branch branch) {
-            return new LiterateBranchProject((LiterateMultibranchProject) getOwner(), branch);
+            return branch.configureJob(new LiterateBranchProject((LiterateMultibranchProject) getOwner(), branch));
         }
 
         /**
