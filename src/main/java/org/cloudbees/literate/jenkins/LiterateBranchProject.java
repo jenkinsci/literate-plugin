@@ -467,12 +467,12 @@ public class LiterateBranchProject extends Project<LiterateBranchProject, Litera
             LiterateEnvironmentProject config = this.environments.get(buildEnv);
             if (config == null) {
                 // todo LOGGER.fine("Adding configuration: " + env);
-                config = branch.configureJob(new LiterateEnvironmentProject(this, buildEnv));
+                config = getBranch().configureJob(new LiterateEnvironmentProject(this, buildEnv));
                 config.onCreatedFromScratch();
                 config.save();
                 this.environments.put(buildEnv, config);
             } else {
-                branch.configureJob(config);
+                getBranch().configureJob(config);
                 config.save();
             }
         }
@@ -494,10 +494,13 @@ public class LiterateBranchProject extends Project<LiterateBranchProject, Litera
             LiterateEnvironmentProject config = this.environments.get(buildEnv);
             if (config == null) {
                 // todo LOGGER.fine("Adding configuration: " + env);
-                config = branch.configureJob(new LiterateEnvironmentProject(this, buildEnv));
+                config = getBranch().configureJob(new LiterateEnvironmentProject(this, buildEnv));
                 config.onCreatedFromScratch();
                 config.save();
                 this.environments.put(buildEnv, config);
+            } else {
+                getBranch().configureJob(config);
+                config.save();
             }
         }
         this.activeEnvironments = activeEnvironments;
