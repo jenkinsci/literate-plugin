@@ -36,6 +36,7 @@ import hudson.init.InitMilestone;
 import hudson.init.Initializer;
 import hudson.model.AbstractBuild;
 import hudson.model.AbstractProject;
+import hudson.model.Action;
 import hudson.model.BuildListener;
 import hudson.model.Item;
 import hudson.model.ItemGroup;
@@ -150,6 +151,13 @@ public class LiterateBranchProject extends Project<LiterateBranchProject, Litera
         getBuildWrappersList().setOwner(this);
 
         rebuildEnvironments(null);
+    }
+
+    @Override
+    protected List<Action> createTransientActions() {
+
+        return super.createTransientActions();    //To change body of overridden methods use File | Settings | File
+                // Templates.
     }
 
     /**
