@@ -217,8 +217,8 @@ public class LiterateBranchBuild extends Build<LiterateBranchProject, LiterateBr
             assert ws != null : "we are in a build so must have a workspace";
             final FilePathRepository repo = new FilePathRepository(ws);
             ProjectModel model = new ProjectModelSource(LiterateBranchProject.class.getClassLoader()).submit(
-                    ProjectModelRequest.builder(
-                            repo).build());
+                    ProjectModelRequest.builder(repo).build());
+            addAction(new ProjectModelAction(model));
             // TODO refactor so that we get the README that was used for reading the project model
             if (repo.isFile("README.md")) {
                 try {

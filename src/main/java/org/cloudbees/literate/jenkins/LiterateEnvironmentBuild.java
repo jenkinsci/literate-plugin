@@ -203,10 +203,9 @@ public class LiterateEnvironmentBuild extends Build<LiterateEnvironmentProject, 
         protected Result doRun(final BuildListener listener) throws Exception, RunnerAbortedException {
             FilePath ws = getWorkspace();
             assert ws != null : "we are in a build so must have a workspace";
-            final FilePathRepository repo = new FilePathRepository(ws);
-            ProjectModel model = new ProjectModelSource(LiterateBranchProject.class.getClassLoader()).submit(
-                    ProjectModelRequest.builder(
-                            repo).build());
+            ProjectModelAction projectModelAction = getParentBuild().getAction(ProjectModelAction.class);
+            assert projectModelAction != null : "our parent build has constructed the model";
+            ProjectModel model = projectModelAction.getModel();
             Map<Class<? extends Publisher>, List<Agent<? extends Publisher>>> agents = new LinkedHashMap<Class<?
                     extends Publisher>, List<Agent<? extends Publisher>>>();
             for (Agent agent : Jenkins.getInstance().getExtensionList(Agent.class)) {
