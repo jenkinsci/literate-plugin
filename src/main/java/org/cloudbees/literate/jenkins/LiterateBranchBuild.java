@@ -43,6 +43,7 @@ import hudson.util.HttpResponses;
 import hudson.util.IOUtils;
 import jenkins.branch.BranchProperty;
 import jenkins.model.Jenkins;
+import org.cloudbees.literate.api.v1.ExecutionEnvironment;
 import org.cloudbees.literate.api.v1.ProjectModel;
 import org.cloudbees.literate.api.v1.ProjectModelRequest;
 import org.cloudbees.literate.api.v1.ProjectModelSource;
@@ -58,6 +59,8 @@ import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
 import java.util.Set;
+
+import static hudson.model.Result.FAILURE;
 
 /**
  * A build of a literate branch project.
@@ -235,8 +238,23 @@ public class LiterateBranchBuild extends Build<LiterateBranchProject, LiterateBr
                     // ignore
                 }
             }
-            environments = BuildEnvironment.fromSets(model.getEnvironments());
+
+            List<ExecutionEnvironment> environmentList = model.getEnvironments();
+            for (BranchProperty p: getParent().getBranch().getProperties()) {
+                if (p instanceof LiterateBranchProperty) {
+                    environmentList = LiterateBranchProperty.class.cast(p).configureExecutionEnvironments(environmentList);
+                }
+            }
+            environments = BuildEnvironment.fromSets(environmentList);
             project.rebuildEnvironments(LiterateBranchBuild.this);
+
+            if(!preBuild(listener,project.getBuilders())) {
+                return FAILURE;
+            }
+            if(!preBuild(listener,project.getPublishersList())) {
+                return FAILURE;
+            }
+
             // TODO sequential support builder fast fail as project option distinct from fan-out
             List<LiterateEnvironmentProject> configurations = new ArrayList<LiterateEnvironmentProject>();
             final Run<LiterateBranchProject, LiterateBranchBuild> upstream = LiterateBranchBuild.this;
@@ -308,6 +326,10 @@ public class LiterateBranchBuild extends Build<LiterateBranchProject, LiterateBr
          */
         @Override
         protected void post2(BuildListener listener) throws Exception {
+            if (!performAllBuildSteps(listener, project.getPublishersList(), true))
+                 setResult(FAILURE);
+             if (!performAllBuildSteps(listener, project.getProperties(), true))
+                 setResult(FAILURE);
         }
 
         /**

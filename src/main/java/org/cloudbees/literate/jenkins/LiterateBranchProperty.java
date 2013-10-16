@@ -23,8 +23,12 @@
  */
 package org.cloudbees.literate.jenkins;
 
+import edu.umd.cs.findbugs.annotations.NonNull;
 import jenkins.branch.BranchProperty;
+import org.cloudbees.literate.api.v1.ExecutionEnvironment;
 import org.cloudbees.literate.api.v1.ProjectModelRequest;
+
+import java.util.List;
 
 /**
  * A {@link BranchProperty} that is specifically for {@link LiterateMultibranchProject}s.
@@ -39,7 +43,18 @@ public abstract class LiterateBranchProperty extends BranchProperty {
      *
      * @param requestBuilder the builder for the {@link ProjectModelRequest}s.
      */
-    public void configureProjectModelRequest(ProjectModelRequest.Builder requestBuilder) {
+    public void configureProjectModelRequest(@NonNull ProjectModelRequest.Builder requestBuilder) {
     }
 
+    /**
+     * This method is an extension point whereby a {@link LiterateBranchProperty} can restrict/control  the
+     * environments that will be built
+     *
+     * @param environments a possibly immutable list of environments.
+     * @return either the provided list of environments or a replacement list.
+     */
+    @NonNull
+    public List<ExecutionEnvironment> configureExecutionEnvironments(@NonNull List<ExecutionEnvironment> environments) {
+        return environments;
+    }
 }
