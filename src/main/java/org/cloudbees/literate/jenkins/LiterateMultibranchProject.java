@@ -254,15 +254,7 @@ public class LiterateMultibranchProject extends
          */
         @Override
         public LiterateBranchProject newInstance(final Branch branch) {
-            LiterateBranchProject branchProject =
-                    branch.configureJob(new LiterateBranchProject((LiterateMultibranchProject) getOwner(), branch));
-            branchProject.getProperties().clear();
-            for (JobProperty<? super LiterateBranchProject> j : branch.configureJobProperties(
-                    new ArrayList<JobProperty<? super LiterateBranchProject>>()
-            )) {
-                branchProject.getProperties().put(j.getDescriptor(), j);
-            }
-            return branchProject;
+            return branch.configureJob(new LiterateBranchProject((LiterateMultibranchProject) getOwner(), branch));
         }
 
         /**
@@ -282,12 +274,6 @@ public class LiterateMultibranchProject extends
         public LiterateBranchProject setBranch(@NonNull LiterateBranchProject project, @NonNull Branch branch) {
             if (!project.getBranch().equals(branch)) {
                 project.setBranch(branch);
-                project.getProperties().clear();
-                for (JobProperty<? super LiterateBranchProject> j : branch.configureJobProperties(
-                        new ArrayList<JobProperty<? super LiterateBranchProject>>()
-                )) {
-                    project.getProperties().put(j.getDescriptor(), j);
-                }
                 try {
                     project.save();
                 } catch (IOException e) {
