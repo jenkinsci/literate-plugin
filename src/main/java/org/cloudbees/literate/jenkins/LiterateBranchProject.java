@@ -38,6 +38,8 @@ import hudson.model.AbstractBuild;
 import hudson.model.AbstractProject;
 import hudson.model.Action;
 import hudson.model.BuildListener;
+import hudson.model.Describable;
+import hudson.model.Descriptor;
 import hudson.model.Item;
 import hudson.model.ItemGroup;
 import hudson.model.Items;
@@ -51,8 +53,10 @@ import hudson.model.TopLevelItem;
 import hudson.model.TopLevelItemDescriptor;
 import hudson.scm.SCM;
 import hudson.security.Permission;
+import hudson.tasks.BuildWrapper;
 import hudson.util.AlternativeUiTextProvider;
 import hudson.util.CopyOnWriteMap;
+import hudson.util.DescribableList;
 import jenkins.branch.Branch;
 import jenkins.model.Jenkins;
 import jenkins.scm.SCMCheckoutStrategy;
@@ -187,8 +191,24 @@ public class LiterateBranchProject extends Project<LiterateBranchProject, Litera
     }
 
     private synchronized void rebuildProperties() {
+        branch.configureJob(this);
+        // TODO refactor to handle the change in getPublishers
+        // TODO refactor to handle the environment build
+        setDescribableListItems(getBuildWrappersList(), branch.configureBuildWrappers(getBuildWrappers()).values());
+        setDescribableListItems(getPublishersList(), branch.configurePublishers(getPublishers()).values());
         properties.replaceBy(branch.configureJobProperties(new ArrayList<JobProperty<? super LiterateBranchProject>>()));
     }
+
+    private <T extends Describable<T>> void setDescribableListItems(DescribableList<T, Descriptor<T>> list, Collection<T> newList) {
+        try {
+            list.setOwner(NOOP);
+            list.replaceBy(newList);
+            list.setOwner(this);
+        } catch (IOException e) {
+            // should never happen
+        }
+    }
+
 
     /**
      * {@inheritDoc}
@@ -477,6 +497,7 @@ public class LiterateBranchProject extends Project<LiterateBranchProject, Litera
             LiterateEnvironmentProject config = this.environments.get(buildEnv);
             if (config == null) {
                 // todo LOGGER.fine("Adding configuration: " + env);
+                // TODO per environment properties and build wrappers and publishers
                 config = getBranch().configureJob(new LiterateEnvironmentProject(this, buildEnv));
                 config.onCreatedFromScratch();
                 config.save();
