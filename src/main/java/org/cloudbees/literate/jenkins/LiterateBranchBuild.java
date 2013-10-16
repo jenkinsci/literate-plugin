@@ -41,6 +41,7 @@ import hudson.model.Run;
 import hudson.slaves.WorkspaceList;
 import hudson.util.HttpResponses;
 import hudson.util.IOUtils;
+import jenkins.branch.BranchProperty;
 import jenkins.model.Jenkins;
 import org.cloudbees.literate.api.v1.ProjectModel;
 import org.cloudbees.literate.api.v1.ProjectModelRequest;
@@ -216,9 +217,16 @@ public class LiterateBranchBuild extends Build<LiterateBranchProject, LiterateBr
             FilePath ws = getWorkspace();
             assert ws != null : "we are in a build so must have a workspace";
             final FilePathRepository repo = new FilePathRepository(ws);
-            ProjectModel model = new ProjectModelSource(LiterateBranchProject.class.getClassLoader()).submit(
-                    ProjectModelRequest.builder(repo).build());
+            ProjectModelRequest.Builder requestBuilder = ProjectModelRequest.builder(repo);
+            for (BranchProperty p: getParent().getBranch().getProperties()) {
+                if (p instanceof LiterateBranchProperty) {
+                    LiterateBranchProperty.class.cast(p).configureProjectModelRequest(requestBuilder);
+                }
+            }
+            ProjectModelSource source = new ProjectModelSource(LiterateBranchProject.class.getClassLoader());
+            ProjectModel model = source.submit(requestBuilder.build());
             addAction(new ProjectModelAction(model));
+
             // TODO refactor so that we get the README that was used for reading the project model
             if (repo.isFile("README.md")) {
                 try {

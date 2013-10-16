@@ -38,6 +38,9 @@ import jenkins.branch.BranchPropertyDescriptor;
 import jenkins.branch.MultiBranchProjectDescriptor;
 import net.jcip.annotations.Immutable;
 import org.apache.commons.lang.StringUtils;
+import org.cloudbees.literate.api.v1.ProjectModel;
+import org.cloudbees.literate.api.v1.ProjectModelRequest;
+import org.cloudbees.literate.api.v1.TaskCommands;
 import org.kohsuke.stapler.DataBoundConstructor;
 
 import java.io.Serializable;
@@ -53,7 +56,7 @@ import java.util.List;
  * @author Stephen Connolly
  */
 @Immutable
-public class LiteratePromotionsBranchProperty extends BranchProperty {
+public class LiteratePromotionsBranchProperty extends LiterateBranchProperty {
 
     @NonNull
     private final List<Promotion> promotions;
@@ -62,6 +65,13 @@ public class LiteratePromotionsBranchProperty extends BranchProperty {
     public LiteratePromotionsBranchProperty(Promotion[] promotions) {
         this.promotions = promotions == null ? Collections.<Promotion>emptyList() : new ArrayList<Promotion>(
                 Arrays.asList(promotions));
+    }
+
+    @Override
+    public void configureProjectModelRequest(ProjectModelRequest.Builder builder) {
+        for (Promotion p: promotions) {
+            builder.addTaskId(p.getName());
+        }
     }
 
     @NonNull
@@ -178,6 +188,16 @@ public class LiteratePromotionsBranchProperty extends BranchProperty {
             } else {
                 return Collections.singleton(new PromotionAction());
             }
+        }
+
+        public ProjectModel getModel(LiterateBranchBuild build) {
+            return build.getAction(ProjectModelAction.class).getModel();
+        }
+
+        public TaskCommands getTask(LiterateBranchBuild build, Promotion promotion) {
+            ProjectModel model = getModel(build);
+            if (model == null) return null;
+            return model.getTask(promotion.getName());
         }
 
         @Extension
