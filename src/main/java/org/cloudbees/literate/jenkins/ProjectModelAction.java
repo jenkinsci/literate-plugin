@@ -23,7 +23,7 @@
  */
 package org.cloudbees.literate.jenkins;
 
-import com.sun.istack.internal.NotNull;
+import edu.umd.cs.findbugs.annotations.NonNull;
 import hudson.model.Action;
 import org.cloudbees.literate.api.v1.ProjectModel;
 
@@ -43,14 +43,14 @@ public class ProjectModelAction implements Action, Serializable {
     /**
      * The project model.
      */
-    @NotNull
+    @NonNull
     private final ProjectModel model;
 
     /**
      * Constructor.
      * @param model the model.
      */
-    public ProjectModelAction(@NotNull ProjectModel model) {
+    public ProjectModelAction(@NonNull ProjectModel model) {
         model.getClass(); // throw NPE if null
         this.model = model;
     }
@@ -59,7 +59,7 @@ public class ProjectModelAction implements Action, Serializable {
      * Returns the model.
      * @return the model.
      */
-    @NotNull
+    @NonNull
     public ProjectModel getModel() {
         return model;
     }
