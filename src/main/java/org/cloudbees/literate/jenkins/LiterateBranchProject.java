@@ -25,6 +25,7 @@ package org.cloudbees.literate.jenkins;
 
 import edu.umd.cs.findbugs.annotations.CheckForNull;
 import edu.umd.cs.findbugs.annotations.NonNull;
+import hudson.BulkChange;
 import hudson.CopyOnWrite;
 import hudson.DescriptorExtensionList;
 import hudson.Extension;
@@ -36,7 +37,6 @@ import hudson.init.InitMilestone;
 import hudson.init.Initializer;
 import hudson.model.AbstractBuild;
 import hudson.model.AbstractProject;
-import hudson.model.Action;
 import hudson.model.BuildListener;
 import hudson.model.Describable;
 import hudson.model.Descriptor;
@@ -54,10 +54,14 @@ import hudson.model.TopLevelItemDescriptor;
 import hudson.scm.SCM;
 import hudson.security.Permission;
 import hudson.tasks.BuildWrapper;
+import hudson.tasks.Publisher;
 import hudson.util.AlternativeUiTextProvider;
 import hudson.util.CopyOnWriteMap;
 import hudson.util.DescribableList;
 import jenkins.branch.Branch;
+import jenkins.branch.BranchProperty;
+import jenkins.branch.DescriptorOrder;
+import jenkins.branch.ProjectDecorator;
 import jenkins.model.Jenkins;
 import jenkins.scm.SCMCheckoutStrategy;
 import jenkins.scm.SCMCheckoutStrategyDescriptor;
@@ -127,7 +131,6 @@ public class LiterateBranchProject extends Project<LiterateBranchProject, Litera
     public LiterateBranchProject(@NonNull LiterateMultibranchProject parent, @NonNull Branch branch) {
         super(parent, branch.getName());
         this.branch = branch;
-        rebuildProperties();
     }
 
     /**
@@ -152,7 +155,6 @@ public class LiterateBranchProject extends Project<LiterateBranchProject, Litera
     @Override
     public void onLoad(@NonNull ItemGroup<? extends Item> parent, @NonNull String name) throws IOException {
         super.onLoad(parent, name);
-        rebuildProperties();
         environments = new CopyOnWriteMap.Tree<BuildEnvironment, LiterateEnvironmentProject>();
         getBuildersList().setOwner(this);
         getPublishersList().setOwner(this);
@@ -187,19 +189,10 @@ public class LiterateBranchProject extends Project<LiterateBranchProject, Litera
     public synchronized void setBranch(@NonNull Branch branch) {
         branch.getClass();
         this.branch = branch;
-        rebuildProperties();
     }
 
-    private synchronized void rebuildProperties() {
-        branch.configureJob(this);
-        // TODO refactor to handle the change in getPublishers
-        // TODO refactor to handle the environment build
-        setDescribableListItems(getBuildWrappersList(), branch.configureBuildWrappers(getBuildWrappers()).values());
-        setDescribableListItems(getPublishersList(), branch.configurePublishers(getPublishers()).values());
-        properties.replaceBy(branch.configureJobProperties(new ArrayList<JobProperty<? super LiterateBranchProject>>()));
-    }
-
-    private <T extends Describable<T>> void setDescribableListItems(DescribableList<T, Descriptor<T>> list, Collection<T> newList) {
+    private <T extends Describable<T>> void setDescribableListItems(DescribableList<T, Descriptor<T>> list,
+                                                                    Collection<T> newList) {
         try {
             list.setOwner(NOOP);
             list.replaceBy(newList);
@@ -496,20 +489,72 @@ public class LiterateBranchProject extends Project<LiterateBranchProject, Litera
             activeEnvironments.add(buildEnv);
             LiterateEnvironmentProject config = this.environments.get(buildEnv);
             if (config == null) {
-                // todo LOGGER.fine("Adding configuration: " + env);
-                // TODO per environment properties and build wrappers and publishers
-                config = getBranch().configureJob(new LiterateEnvironmentProject(this, buildEnv));
+                config = decorate(new LiterateEnvironmentProject(this, buildEnv));
                 config.onCreatedFromScratch();
                 config.save();
                 this.environments.put(buildEnv, config);
             } else {
-                getBranch().configureJob(config);
+                decorate(config);
                 config.save();
             }
         }
         this.activeEnvironments = activeEnvironments;
         return activeEnvironments;
     }
+
+    /**
+     * Decorates the environment project.
+     *
+     * @param project the project.
+     * @return the project for nicer method chaining
+     */
+    @SuppressWarnings("ConstantConditions")
+    public LiterateEnvironmentProject decorate(LiterateEnvironmentProject project) {
+        Branch branch = getBranch();
+        // HACK ALERT
+        // ==========
+        // We don't want to trigger a save, so we will do some trickery to inject the new values
+        // it would be better if Core gave us some hooks to do this
+        BulkChange bc = new BulkChange(project);
+        try {
+            List<BranchProperty> properties = new ArrayList<BranchProperty>(branch.getProperties());
+            Collections.sort(properties, DescriptorOrder.reverse(BranchProperty.class));
+            for (BranchProperty property : properties) {
+                ProjectDecorator<LiterateEnvironmentProject, LiterateEnvironmentBuild> decorator =
+                        property.decorator(project);
+                if (decorator != null) {
+                    // if Project then we can feed the publishers and build wrappers
+                    DescribableList<Publisher, Descriptor<Publisher>> publishersList = project.getPublishersList();
+                    DescribableList buildWrappersList = Project.class.cast(project).getBuildWrappersList();
+                    List<Publisher> publishers = decorator.publishers(publishersList.toList());
+                    List<BuildWrapper> buildWrappers = decorator.buildWrappers(buildWrappersList.toList());
+                    publishersList.replaceBy(publishers);
+                    buildWrappersList.replaceBy(buildWrappers);
+                    // we can always feed the job properties... but just not as easily as we'd like
+
+                    List<JobProperty<? super LiterateEnvironmentProject>> jobProperties =
+                            decorator.jobProperties(project.getAllProperties());
+                    // HACK: need to replace all properties but no nice method... we will iterate our way through
+                    // both removal and addition
+                    for (JobProperty<? super LiterateEnvironmentProject> p : project.getAllProperties()) {
+                        project.removeProperty(p);
+                    }
+                    for (JobProperty<? super LiterateEnvironmentProject> p : jobProperties) {
+                        project.addProperty(p);
+                    }
+
+                    // now apply the final layer
+                    decorator.project(project);
+                }
+            }
+        } catch (IOException e) {
+            // should be safe to ignore as the BulkChange suppresses the save operation.
+        } finally {
+            bc.abort();
+        }
+        return project;
+    }
+
 
     /**
      * Updates the list of active environments.
@@ -525,12 +570,12 @@ public class LiterateBranchProject extends Project<LiterateBranchProject, Litera
             LiterateEnvironmentProject config = this.environments.get(buildEnv);
             if (config == null) {
                 // todo LOGGER.fine("Adding configuration: " + env);
-                config = getBranch().configureJob(new LiterateEnvironmentProject(this, buildEnv));
+                config = decorate(new LiterateEnvironmentProject(this, buildEnv));
                 config.onCreatedFromScratch();
                 config.save();
                 this.environments.put(buildEnv, config);
             } else {
-                getBranch().configureJob(config);
+                decorate(config);
                 config.save();
             }
         }

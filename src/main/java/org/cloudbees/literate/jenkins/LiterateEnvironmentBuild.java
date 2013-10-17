@@ -293,9 +293,6 @@ public class LiterateEnvironmentBuild extends Build<LiterateEnvironmentProject, 
                     currentAgent.log(listener, "Final effective configuration: Disabled");
                 }
             }
-            // TODO JobProperty and BuildWrapper support
-            Branch branch = getParent().getParent().getBranch();
-            publishers = new ArrayList<Publisher>(branch.configurePublishers(Descriptor.toMap(publishers)).values());
             final Launcher launcher = createLauncher(listener);
             EnvVars envVars = getEnvironment(listener);
             BuildEnvironment buildEnvironment = getParent().getEnvironment();

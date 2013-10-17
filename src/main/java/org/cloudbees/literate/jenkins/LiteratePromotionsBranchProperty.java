@@ -33,9 +33,9 @@ import hudson.model.Job;
 import hudson.model.JobProperty;
 import hudson.model.JobPropertyDescriptor;
 import hudson.model.ModelObject;
-import jenkins.branch.BranchProperty;
 import jenkins.branch.BranchPropertyDescriptor;
 import jenkins.branch.MultiBranchProjectDescriptor;
+import jenkins.branch.ProjectDecorator;
 import net.jcip.annotations.Immutable;
 import org.apache.commons.lang.StringUtils;
 import org.cloudbees.literate.api.v1.ProjectModel;
@@ -68,20 +68,25 @@ public class LiteratePromotionsBranchProperty extends LiterateBranchProperty {
     }
 
     @Override
-    public void configureProjectModelRequest(ProjectModelRequest.Builder builder) {
-        for (Promotion p: promotions) {
+    public void projectModelRequest(ProjectModelRequest.Builder builder) {
+        for (Promotion p : promotions) {
             builder.addTaskId(p.getName());
         }
     }
 
-    @NonNull
     @Override
-    public <JobT extends Job<?, ?>> List<JobProperty<? super JobT>> configureJobProperties(
-            @NonNull List<JobProperty<? super JobT>> properties) {
-        List<JobProperty<? super JobT>> result = new ArrayList<JobProperty<? super JobT>>(properties);
-        // TODO cast seems ugly... but would prefer to avoid adding type 3 params to BranchProperty just to avoid cast
-        result.add((JobProperty<? super JobT>) new JobPropertyImpl(promotions));
-        return result;
+    public ProjectDecorator<LiterateBranchProject, LiterateBranchBuild> branchDecorator() {
+        return new ProjectDecorator<LiterateBranchProject, LiterateBranchBuild>() {
+            @NonNull
+            @Override
+            public List<JobProperty<? super LiterateBranchProject>> jobProperties(
+                    @NonNull List<JobProperty<? super LiterateBranchProject>> jobProperties) {
+                List<JobProperty<? super LiterateBranchProject>> result =
+                        new ArrayList<JobProperty<? super LiterateBranchProject>>(jobProperties);
+                result.add(new JobPropertyImpl(promotions));
+                return result;
+            }
+        };
     }
 
     @NonNull
@@ -191,12 +196,15 @@ public class LiteratePromotionsBranchProperty extends LiterateBranchProperty {
         }
 
         public ProjectModel getModel(LiterateBranchBuild build) {
-            return build.getAction(ProjectModelAction.class).getModel();
+            ProjectModelAction action = build.getAction(ProjectModelAction.class);
+            return action == null ? null : action.getModel();
         }
 
         public TaskCommands getTask(LiterateBranchBuild build, Promotion promotion) {
             ProjectModel model = getModel(build);
-            if (model == null) return null;
+            if (model == null) {
+                return null;
+            }
             return model.getTask(promotion.getName());
         }
 

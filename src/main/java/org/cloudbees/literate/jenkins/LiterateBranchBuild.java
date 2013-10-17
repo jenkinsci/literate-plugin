@@ -223,7 +223,7 @@ public class LiterateBranchBuild extends Build<LiterateBranchProject, LiterateBr
             ProjectModelRequest.Builder requestBuilder = ProjectModelRequest.builder(repo);
             for (BranchProperty p: getParent().getBranch().getProperties()) {
                 if (p instanceof LiterateBranchProperty) {
-                    LiterateBranchProperty.class.cast(p).configureProjectModelRequest(requestBuilder);
+                    LiterateBranchProperty.class.cast(p).projectModelRequest(requestBuilder);
                 }
             }
             ProjectModelSource source = new ProjectModelSource(LiterateBranchProject.class.getClassLoader());
@@ -242,7 +242,7 @@ public class LiterateBranchBuild extends Build<LiterateBranchProject, LiterateBr
             List<ExecutionEnvironment> environmentList = model.getEnvironments();
             for (BranchProperty p: getParent().getBranch().getProperties()) {
                 if (p instanceof LiterateBranchProperty) {
-                    environmentList = LiterateBranchProperty.class.cast(p).configureExecutionEnvironments(environmentList);
+                    environmentList = LiterateBranchProperty.class.cast(p).environments(environmentList);
                 }
             }
             environments = BuildEnvironment.fromSets(environmentList);

@@ -23,7 +23,11 @@
  */
 package org.cloudbees.literate.jenkins;
 
+import edu.umd.cs.findbugs.annotations.CheckForNull;
 import edu.umd.cs.findbugs.annotations.NonNull;
+import hudson.model.AbstractBuild;
+import hudson.model.AbstractProject;
+import jenkins.branch.ProjectDecorator;
 import jenkins.branch.BranchProperty;
 import org.cloudbees.literate.api.v1.ExecutionEnvironment;
 import org.cloudbees.literate.api.v1.ProjectModelRequest;
@@ -43,7 +47,7 @@ public abstract class LiterateBranchProperty extends BranchProperty {
      *
      * @param requestBuilder the builder for the {@link ProjectModelRequest}s.
      */
-    public void configureProjectModelRequest(@NonNull ProjectModelRequest.Builder requestBuilder) {
+    public void projectModelRequest(@NonNull ProjectModelRequest.Builder requestBuilder) {
     }
 
     /**
@@ -54,7 +58,33 @@ public abstract class LiterateBranchProperty extends BranchProperty {
      * @return either the provided list of environments or a replacement list.
      */
     @NonNull
-    public List<ExecutionEnvironment> configureExecutionEnvironments(@NonNull List<ExecutionEnvironment> environments) {
+    public List<ExecutionEnvironment> environments(@NonNull List<ExecutionEnvironment> environments) {
         return environments;
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @SuppressWarnings("unchecked")
+    @Override
+    public final <P extends AbstractProject<P, B>, B extends AbstractBuild<P, B>> ProjectDecorator<P, B> decorator(
+            Class<P> jobType) {
+        if (LiterateBranchProject.class.isAssignableFrom(jobType)) {
+            return (ProjectDecorator<P, B>) branchDecorator();
+        }
+        if (LiterateEnvironmentProject.class.isAssignableFrom(jobType)) {
+            return (ProjectDecorator<P, B>) environmentDecorator();
+        }
+        return null;
+    }
+
+    @CheckForNull
+    public ProjectDecorator<LiterateBranchProject, LiterateBranchBuild> branchDecorator() {
+        return null;
+    }
+
+    @CheckForNull
+    public ProjectDecorator<LiterateEnvironmentProject, LiterateEnvironmentBuild> environmentDecorator() {
+        return null;
     }
 }
