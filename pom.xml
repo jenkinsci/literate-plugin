@@ -107,7 +107,7 @@
     <dependency>
       <groupId>org.jenkins-ci.literate</groupId>
       <artifactId>literate-api</artifactId>
-      <version>0.3</version>
+      <version>0.4</version>
     </dependency>
     <!-- plugin dependencies -->
     <dependency>
