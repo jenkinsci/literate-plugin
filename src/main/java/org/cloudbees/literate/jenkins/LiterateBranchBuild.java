@@ -221,13 +221,28 @@ public class LiterateBranchBuild extends Build<LiterateBranchProject, LiterateBr
             assert ws != null : "we are in a build so must have a workspace";
             final FilePathRepository repo = new FilePathRepository(ws);
             ProjectModelRequest.Builder requestBuilder = ProjectModelRequest.builder(repo);
-            for (BranchProperty p: getParent().getBranch().getProperties()) {
+            for (BranchProperty p : getParent().getBranch().getProperties()) {
                 if (p instanceof LiterateBranchProperty) {
                     LiterateBranchProperty.class.cast(p).projectModelRequest(requestBuilder);
                 }
             }
+            listener.getLogger().println("Parsing literate build description...");
             ProjectModelSource source = new ProjectModelSource(LiterateBranchProject.class.getClassLoader());
             ProjectModel model = source.submit(requestBuilder.build());
+            listener.getLogger().println("Literate build description:");
+            listener.getLogger().println("Checking " + model.getEnvironments().size() + " execution environments");
+            boolean issues = false;
+            for (ExecutionEnvironment e : model.getEnvironments()) {
+                if (model.getBuildFor(e) == null) {
+                    issues = true;
+                }
+                listener.getLogger()
+                        .println(" * " + e.getLabels() + (model.getBuildFor(e) == null ? " missing build" : " ok"));
+            }
+            if (issues) {
+                return FAILURE;
+            }
+
             addAction(new ProjectModelAction(model));
 
             // TODO refactor so that we get the README that was used for reading the project model
@@ -240,7 +255,7 @@ public class LiterateBranchBuild extends Build<LiterateBranchProject, LiterateBr
             }
 
             List<ExecutionEnvironment> environmentList = model.getEnvironments();
-            for (BranchProperty p: getParent().getBranch().getProperties()) {
+            for (BranchProperty p : getParent().getBranch().getProperties()) {
                 if (p instanceof LiterateBranchProperty) {
                     environmentList = LiterateBranchProperty.class.cast(p).environments(environmentList);
                 }
@@ -248,10 +263,10 @@ public class LiterateBranchBuild extends Build<LiterateBranchProject, LiterateBr
             environments = BuildEnvironment.fromSets(environmentList);
             project.rebuildEnvironments(LiterateBranchBuild.this);
 
-            if(!preBuild(listener,project.getBuilders())) {
+            if (!preBuild(listener, project.getBuilders())) {
                 return FAILURE;
             }
-            if(!preBuild(listener,project.getPublishersList())) {
+            if (!preBuild(listener, project.getPublishersList())) {
                 return FAILURE;
             }
 
@@ -326,10 +341,12 @@ public class LiterateBranchBuild extends Build<LiterateBranchProject, LiterateBr
          */
         @Override
         protected void post2(BuildListener listener) throws Exception {
-            if (!performAllBuildSteps(listener, project.getPublishersList(), true))
-                 setResult(FAILURE);
-             if (!performAllBuildSteps(listener, project.getProperties(), true))
-                 setResult(FAILURE);
+            if (!performAllBuildSteps(listener, project.getPublishersList(), true)) {
+                setResult(FAILURE);
+            }
+            if (!performAllBuildSteps(listener, project.getProperties(), true)) {
+                setResult(FAILURE);
+            }
         }
 
         /**
