@@ -48,6 +48,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
+import java.util.Iterator;
 import java.util.List;
 
 /**
@@ -59,17 +60,17 @@ import java.util.List;
 public class LiteratePromotionsBranchProperty extends LiterateBranchProperty {
 
     @NonNull
-    private final List<Promotion> promotions;
+    private final List<Promotion> processes;
 
     @DataBoundConstructor
-    public LiteratePromotionsBranchProperty(Promotion[] promotions) {
-        this.promotions = promotions == null ? Collections.<Promotion>emptyList() : new ArrayList<Promotion>(
-                Arrays.asList(promotions));
+    public LiteratePromotionsBranchProperty(Promotion[] processes) {
+        this.processes = processes == null ? Collections.<Promotion>emptyList() : new ArrayList<Promotion>(
+                Arrays.asList(processes));
     }
 
     @Override
     public void projectModelRequest(ProjectModelRequest.Builder builder) {
-        for (Promotion p : promotions) {
+        for (Promotion p : processes) {
             builder.addTaskId(p.getName());
         }
     }
@@ -81,17 +82,23 @@ public class LiteratePromotionsBranchProperty extends LiterateBranchProperty {
             @Override
             public List<JobProperty<? super LiterateBranchProject>> jobProperties(
                     @NonNull List<JobProperty<? super LiterateBranchProject>> jobProperties) {
-                List<JobProperty<? super LiterateBranchProject>> result =
-                        new ArrayList<JobProperty<? super LiterateBranchProject>>(jobProperties);
-                result.add(new JobPropertyImpl(promotions));
+                List<JobProperty<? super LiterateBranchProject>> result = asArrayList(jobProperties);
+                for (Iterator<JobProperty<? super LiterateBranchProject>> iterator = result.iterator();
+                     iterator.hasNext(); ) {
+                    JobProperty<? super LiterateBranchProject> p = iterator.next();
+                    if (p instanceof JobPropertyImpl) {
+                        iterator.remove();
+                    }
+                }
+                result.add(new JobPropertyImpl(processes));
                 return result;
             }
         };
     }
 
     @NonNull
-    public List<Promotion> getPromotions() {
-        return Collections.unmodifiableList(promotions);
+    public List<Promotion> getProcesses() {
+        return Collections.unmodifiableList(processes);
     }
 
     @Extension
@@ -180,19 +187,34 @@ public class LiteratePromotionsBranchProperty extends LiterateBranchProperty {
     @Immutable
     public static class JobPropertyImpl extends JobProperty<LiterateBranchProject> {
 
-        private final List<Promotion> promotions;
+        @NonNull
+        private final List<Promotion> processes;
 
-        public JobPropertyImpl(@CheckForNull List<Promotion> promotions) {
-            this.promotions = promotions == null ? new ArrayList<Promotion>() : new ArrayList<Promotion>(promotions);
+        @CheckForNull
+        private transient Collection<PromotionProjectAction> jobActions;
+
+        public JobPropertyImpl(@CheckForNull List<Promotion> processes) {
+            this.processes = processes == null ? new ArrayList<Promotion>() : new ArrayList<Promotion>(processes);
         }
 
         @Override
         public Collection<? extends Action> getJobActions(LiterateBranchProject job) {
-            if (promotions.isEmpty()) {
-                return Collections.emptyList();
-            } else {
-                return Collections.singleton(new PromotionAction());
+            if (jobActions == null) {
+                if (processes.isEmpty()) {
+                    jobActions = Collections.emptyList();
+                } else {
+                    jobActions = Collections.singleton(new PromotionProjectAction(this));
+                }
             }
+            return jobActions;
+        }
+
+        public LiterateBranchProject getOwner() {
+            return owner;
+        }
+
+        public List<Promotion> getProcesses() {
+            return processes;
         }
 
         public ProjectModel getModel(LiterateBranchBuild build) {
@@ -222,23 +244,37 @@ public class LiteratePromotionsBranchProperty extends LiterateBranchProperty {
             }
         }
 
-        public class PromotionAction implements Action {
+    }
 
-            // TODO whatever you want
+    public static class PromotionProjectAction implements Action {
 
-            public String getIconFileName() {
-                return "star.png";
-            }
+        private final JobPropertyImpl property;
 
-            public String getDisplayName() {
-                return "Promotions";
-            }
-
-            public String getUrlName() {
-                return "promotions";
-            }
+        public PromotionProjectAction(JobPropertyImpl property) {
+            this.property = property;
         }
 
+        // TODO whatever you want
+
+        public String getIconFileName() {
+            return "star.png";
+        }
+
+        public String getDisplayName() {
+            return "Promotions";
+        }
+
+        public String getUrlName() {
+            return "promotions";
+        }
+
+        public JobPropertyImpl getJobProperty() {
+            return property;
+        }
+
+        public LiterateBranchProject getOwner() {
+            return property.getOwner();
+        }
     }
 
 }
