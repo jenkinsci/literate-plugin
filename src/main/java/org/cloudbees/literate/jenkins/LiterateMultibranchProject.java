@@ -187,6 +187,7 @@ public class LiterateMultibranchProject extends
                 if (probe.exists(markerFile)) {
                     return true;
                 }
+                listener.getLogger().println(MessageFormat.format("No {0} marker file", markerFile));
                 return false;
             }
         };
