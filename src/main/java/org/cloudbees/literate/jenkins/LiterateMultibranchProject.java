@@ -32,7 +32,6 @@ import hudson.model.Item;
 import hudson.model.ItemGroup;
 import hudson.model.Items;
 import hudson.model.Job;
-import hudson.model.JobProperty;
 import hudson.model.TaskListener;
 import hudson.model.TopLevelItem;
 import hudson.scm.NullSCM;
@@ -56,6 +55,7 @@ import org.kohsuke.stapler.StaplerResponse;
 
 import javax.servlet.ServletException;
 import java.io.IOException;
+import java.text.MessageFormat;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Iterator;
@@ -68,6 +68,16 @@ import java.util.List;
  */
 public class LiterateMultibranchProject extends
         MultiBranchProject<LiterateBranchProject, LiterateBranchBuild> {
+
+    /**
+     * The default marker file.
+     */
+    private static final String DEFAULT_MARKER_FILE = ".cloudbees.md";
+
+    /**
+     * The name of the marker file.
+     */
+    private String markerFile;
 
     /**
      * The profile(s) that this build will activate.
@@ -105,6 +115,24 @@ public class LiterateMultibranchProject extends
      */
     public void setProfiles(String profiles) {
         this.profiles = profiles;
+    }
+
+    /**
+     * Gets the project marker file.
+     *
+     * @return the project marker file.
+     */
+    public String getMarkerFile() {
+        return StringUtils.isBlank(markerFile) ? getDescriptor().getMarkerFile() : markerFile;
+    }
+
+    /**
+     * Sets the project marker file.
+     *
+     * @param markerFile the project marker file.
+     */
+    public void setMarkerFile(String markerFile) {
+        this.markerFile = StringUtils.isBlank(markerFile) ? null : markerFile.trim();
     }
 
     /**
@@ -153,11 +181,13 @@ public class LiterateMultibranchProject extends
      */
     @Override
     public SCMSourceCriteria getSCMSourceCriteria(@NonNull SCMSource source) {
-        // TODO per-project marker files
         return new SCMSourceCriteria() {
-
             public boolean isHead(@NonNull Probe probe, @NonNull TaskListener listener) throws IOException {
-                return probe.exists(".cloudbees.md");
+                final String markerFile = getMarkerFile();
+                if (probe.exists(markerFile)) {
+                    return true;
+                }
+                return false;
             }
         };
     }
@@ -185,7 +215,22 @@ public class LiterateMultibranchProject extends
         } else {
             profiles = specifyProfiles.optString("profiles", "");
         }
+        JSONObject specifyMarkerFile = json.optJSONObject("specifyMarkerFile");
+        if (specifyMarkerFile == null) {
+            setMarkerFile(null);
+        } else {
+            setMarkerFile(specifyMarkerFile.optString("markerFile", ""));
+        }
         // TODO expose the environment mapper
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @NonNull
+    @Override
+    public DescriptorImpl getDescriptor() {
+        return (DescriptorImpl) super.getDescriptor();
     }
 
     /**
@@ -193,6 +238,11 @@ public class LiterateMultibranchProject extends
      */
     @Extension
     public static class DescriptorImpl extends MultiBranchProjectDescriptor {
+
+        /**
+         * The global default marker file.
+         */
+        private String markerFile;
 
         /**
          * {@inheritDoc}
@@ -234,6 +284,38 @@ public class LiterateMultibranchProject extends
         @SuppressWarnings("unused") // stapler
         public BranchProjectFactoryDescriptor getProjectFactoryDescriptor() {
             return Jenkins.getInstance().getDescriptorByType(ProjectFactoryImpl.DescriptorImpl.class);
+        }
+
+        /**
+         * Returns the global default marker file.
+         *
+         * @return the global default marker file.
+         */
+        public String getMarkerFile() {
+            return StringUtils.isBlank(markerFile) ? DEFAULT_MARKER_FILE : markerFile;
+        }
+
+        /**
+         * Sets the global default marker file.
+         *
+         * @param markerFile the global default marker file.
+         */
+        public void setMarkerFile(String markerFile) {
+            this.markerFile = StringUtils.isBlank(markerFile) ? DEFAULT_MARKER_FILE : markerFile.trim();
+        }
+
+        /**
+         * {@inheritDoc}
+         */
+        @Override
+        public boolean configure(StaplerRequest req, JSONObject json) throws FormException {
+            JSONObject specifyMarkerFile = json.optJSONObject("specifyMarkerFile");
+            if (specifyMarkerFile == null) {
+                setMarkerFile(null);
+            } else {
+                setMarkerFile(specifyMarkerFile.optString("markerFile", ""));
+            }
+            return true;
         }
     }
 

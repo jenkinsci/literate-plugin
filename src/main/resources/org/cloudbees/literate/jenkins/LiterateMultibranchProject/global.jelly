@@ -23,14 +23,11 @@
  -->
 <?jelly escape-by-default='true'?>
 <j:jelly xmlns:j="jelly:core" xmlns:st="jelly:stapler" xmlns:d="jelly:define" xmlns:l="/lib/layout" xmlns:t="/lib/hudson" xmlns:f="/lib/form">
-  <f:optionalBlock title="${%Specify build profiles}" field="specifyProfiles">
-    <f:entry title="${%Build profiles}" field="profiles">
-      <f:textbox/>
-    </f:entry>
-  </f:optionalBlock>
-  <f:optionalBlock title="${%Specify branch marker file}" field="specifyMarkerFile">
-    <f:entry title="${%Marker file}" field="markerFile">
-      <f:textbox/>
-    </f:entry>
-  </f:optionalBlock>
+  <f:section title="${%Literate-style multi-branch projects}">
+    <f:optionalBlock title="${%Specify branch marker file}" field="specifyMarkerFile">
+      <f:entry title="${%Marker file}" field="markerFile">
+        <f:textbox/>
+      </f:entry>
+    </f:optionalBlock>
+  </f:section>
 </j:jelly>

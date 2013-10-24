@@ -221,6 +221,7 @@ public class LiterateBranchBuild extends Build<LiterateBranchProject, LiterateBr
             assert ws != null : "we are in a build so must have a workspace";
             final FilePathRepository repo = new FilePathRepository(ws);
             ProjectModelRequest.Builder requestBuilder = ProjectModelRequest.builder(repo);
+            requestBuilder.withBaseName(getParent().getParent().getMarkerFile());
             for (BranchProperty p : getParent().getBranch().getProperties()) {
                 if (p instanceof LiterateBranchProperty) {
                     LiterateBranchProperty.class.cast(p).projectModelRequest(requestBuilder);
