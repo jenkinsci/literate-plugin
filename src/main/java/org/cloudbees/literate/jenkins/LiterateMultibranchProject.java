@@ -49,6 +49,7 @@ import jenkins.scm.api.SCMSource;
 import jenkins.scm.api.SCMSourceCriteria;
 import net.sf.json.JSONObject;
 import org.apache.commons.lang.StringUtils;
+import org.cloudbees.literate.spi.v1.ProjectModelBuilder;
 import org.kohsuke.stapler.DataBoundConstructor;
 import org.kohsuke.stapler.StaplerRequest;
 import org.kohsuke.stapler.StaplerResponse;
@@ -57,9 +58,11 @@ import javax.servlet.ServletException;
 import java.io.IOException;
 import java.text.MessageFormat;
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.Collections;
 import java.util.Iterator;
 import java.util.List;
+import java.util.ServiceLoader;
 
 /**
  * A multiple branch literate build project type.
@@ -70,14 +73,14 @@ public class LiterateMultibranchProject extends
         MultiBranchProject<LiterateBranchProject, LiterateBranchBuild> {
 
     /**
-     * The default marker file.
+     * The default base name
      */
-    private static final String DEFAULT_MARKER_FILE = ".cloudbees.md";
+    private static final String DEFAULT_BASE_NAME = "cloudbees";
 
     /**
-     * The name of the marker file.
+     * The base name for marker file.
      */
-    private String markerFile;
+    private String baseName;
 
     /**
      * The profile(s) that this build will activate.
@@ -118,21 +121,21 @@ public class LiterateMultibranchProject extends
     }
 
     /**
-     * Gets the project marker file.
+     * Gets the base name for the project marker file.
      *
-     * @return the project marker file.
+     * @return the base name for the project marker file.
      */
-    public String getMarkerFile() {
-        return StringUtils.isBlank(markerFile) ? getDescriptor().getMarkerFile() : markerFile;
+    public String getBaseName() {
+        return StringUtils.isBlank(baseName) ? getDescriptor().getBaseName(): baseName;
     }
 
     /**
-     * Sets the project marker file.
+     * Sets the base name for the project marker file.
      *
-     * @param markerFile the project marker file.
+     * @param baseName the base name for the project marker file
      */
-    public void setMarkerFile(String markerFile) {
-        this.markerFile = StringUtils.isBlank(markerFile) ? null : markerFile.trim();
+    public void setBaseName(String baseName) {
+        this.baseName = StringUtils.isBlank(baseName) ? DEFAULT_BASE_NAME : baseName;
     }
 
     /**
@@ -161,6 +164,15 @@ public class LiterateMultibranchProject extends
     public boolean isSpecifyProfiles() {
         return !StringUtils.isBlank(profiles);
     }
+    
+    /**
+     * Returns {@code true} if and only if this build is defining a base name that is different from the default.
+     * 
+     * @returns {@code true} if and only if this build is defining a base name that is different from the default.
+     */
+    public boolean isSpecifyBaseName() {
+        return !StringUtils.equals(getBaseName(), DEFAULT_BASE_NAME);
+    }
 
     /**
      * Returns the list of profiles.
@@ -183,11 +195,22 @@ public class LiterateMultibranchProject extends
     public SCMSourceCriteria getSCMSourceCriteria(@NonNull SCMSource source) {
         return new SCMSourceCriteria() {
             public boolean isHead(@NonNull Probe probe, @NonNull TaskListener listener) throws IOException {
-                final String markerFile = getMarkerFile();
-                if (probe.exists(markerFile)) {
-                    return true;
+                List<ProjectModelBuilder> builders = new ArrayList<ProjectModelBuilder>();
+                for (ProjectModelBuilder builder : ServiceLoader.load(ProjectModelBuilder.class, this.getClass().getClassLoader())) {
+                    builders.add(builder);
                 }
-                listener.getLogger().println(MessageFormat.format("No {0} marker file", markerFile));
+                Collections.sort(builders, new ProjectModelBuilder.PriorityComparator());
+                Collection<String> possibleMarkerFiles = new ArrayList<String> ();
+                for (ProjectModelBuilder builder : builders) {
+                    possibleMarkerFiles.addAll(builder.getPossibleMarkerFiles(getBaseName()));
+                }
+                
+                for (String markerFile : possibleMarkerFiles) {
+                    if (probe.exists(markerFile)) {
+                        return true;
+                    }
+                }
+                listener.getLogger().println(MessageFormat.format("Couldn''t find any of the marker files : {0}", StringUtils.join(possibleMarkerFiles, ", ")));
                 return false;
             }
         };
@@ -216,11 +239,11 @@ public class LiterateMultibranchProject extends
         } else {
             profiles = specifyProfiles.optString("profiles", "");
         }
-        JSONObject specifyMarkerFile = json.optJSONObject("specifyMarkerFile");
-        if (specifyMarkerFile == null) {
-            setMarkerFile(null);
+        JSONObject specifyBaseName = json.optJSONObject("specifyBaseName");
+        if (specifyBaseName == null) {
+            setBaseName(null);
         } else {
-            setMarkerFile(specifyMarkerFile.optString("markerFile", ""));
+            setBaseName(specifyBaseName.optString("baseName", ""));
         }
         // TODO expose the environment mapper
     }
@@ -241,9 +264,9 @@ public class LiterateMultibranchProject extends
     public static class DescriptorImpl extends MultiBranchProjectDescriptor {
 
         /**
-         * The global default marker file.
+         * The global default base name for marker file
          */
-        private String markerFile;
+        private String baseName;
 
         /**
          * {@inheritDoc}
@@ -288,21 +311,25 @@ public class LiterateMultibranchProject extends
         }
 
         /**
-         * Returns the global default marker file.
-         *
-         * @return the global default marker file.
+         * Gets the base name for the project marker file
+         * 
+         * @return the base name for the project marker file
          */
-        public String getMarkerFile() {
-            return StringUtils.isBlank(markerFile) ? DEFAULT_MARKER_FILE : markerFile;
+        public String getBaseName() {
+            return StringUtils.isBlank(baseName) ? DEFAULT_BASE_NAME : baseName;
         }
 
         /**
-         * Sets the global default marker file.
-         *
-         * @param markerFile the global default marker file.
+         * Sets the base name for the project marker file.
+         * 
+         * @param baseName the base name for the project marker file
          */
-        public void setMarkerFile(String markerFile) {
-            this.markerFile = StringUtils.isBlank(markerFile) ? DEFAULT_MARKER_FILE : markerFile.trim();
+        public void setBaseName(String baseName) {
+            this.baseName = StringUtils.isBlank(baseName) ? DEFAULT_BASE_NAME : baseName.trim();
+        }
+
+        public boolean isSpecifyBaseName() {
+            return !StringUtils.equals(getBaseName(), DEFAULT_BASE_NAME); 
         }
 
         /**
@@ -310,11 +337,11 @@ public class LiterateMultibranchProject extends
          */
         @Override
         public boolean configure(StaplerRequest req, JSONObject json) throws FormException {
-            JSONObject specifyMarkerFile = json.optJSONObject("specifyMarkerFile");
-            if (specifyMarkerFile == null) {
-                setMarkerFile(null);
+            JSONObject specifyBaseName = json.optJSONObject("specifyBaseName");
+            if (specifyBaseName == null) {
+                setBaseName(null);
             } else {
-                setMarkerFile(specifyMarkerFile.optString("markerFile", ""));
+                setBaseName(specifyBaseName.optString("baseName", ""));
             }
             return true;
         }

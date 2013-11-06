@@ -28,8 +28,8 @@
       <f:textbox/>
     </f:entry>
   </f:optionalBlock>
-  <f:optionalBlock title="${%Specify branch marker file}" field="specifyMarkerFile">
-    <f:entry title="${%Marker file}" field="markerFile">
+  <f:optionalBlock title="${%Specify base name for marker file}" field="specifyBaseName">
+    <f:entry title="${%Base Name}" field="baseName">
       <f:textbox/>
     </f:entry>
   </f:optionalBlock>
