@@ -217,6 +217,8 @@ public class LiteratePromotionsBranchProperty extends LiterateBranchProperty {
             return owner;
         }
 
+        @edu.umd.cs.findbugs.annotations.SuppressWarnings(value = "RCN_REDUNDANT_NULLCHECK_OF_NONNULL_VALUE",
+                justification = "migration of legacy data")
         public List<Promotion> getProcesses() {
             return processes == null ? Collections.<Promotion>emptyList() : Collections.unmodifiableList(processes);
         }
