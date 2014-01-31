@@ -134,7 +134,10 @@ public class LiterateMultibranchProject extends
      * @param markerFile the project marker file.
      */
     public void setMarkerFile(String markerFile) {
-        this.markerFile = StringUtils.isBlank(markerFile) ? null : markerFile.trim();
+        this.markerFile = StringUtils.isBlank(markerFile)
+                || StringUtils.equals(markerFile, getDescriptor().getMarkerFile())
+                ? null
+                : markerFile.trim();
     }
 
     /**
