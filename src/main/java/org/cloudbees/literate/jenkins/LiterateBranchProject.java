@@ -218,6 +218,8 @@ public class LiterateBranchProject extends Project<LiterateBranchProject, Litera
     @Override
     @NonNull
     public synchronized SCM getScm() {
+        // FIXME scm reference is getting updated through SCMCheckoutStrategyImpl#preCheckout, so it should probably be
+        // exposed to LiterateEnvironmentProject instances
         return branch.getScm();
     }
 
