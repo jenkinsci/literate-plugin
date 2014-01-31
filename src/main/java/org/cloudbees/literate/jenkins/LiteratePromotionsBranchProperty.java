@@ -23,8 +23,7 @@
  */
 package org.cloudbees.literate.jenkins;
 
-import edu.umd.cs.findbugs.annotations.CheckForNull;
-import edu.umd.cs.findbugs.annotations.NonNull;
+import edu.umd.cs.findbugs.annotations.*;
 import hudson.Extension;
 import hudson.model.AbstractDescribableImpl;
 import hudson.model.Action;
@@ -98,6 +97,8 @@ public class LiteratePromotionsBranchProperty extends LiterateBranchProperty {
     }
 
     @NonNull
+    @edu.umd.cs.findbugs.annotations.SuppressWarnings(value = "RCN_REDUNDANT_NULLCHECK_OF_NONNULL_VALUE",
+            justification = "migration of legacy data")
     public List<Promotion> getProcesses() {
         return processes == null ? Collections.<Promotion>emptyList() : Collections.unmodifiableList(processes);
     }
@@ -199,6 +200,8 @@ public class LiteratePromotionsBranchProperty extends LiterateBranchProperty {
         }
 
         @Override
+        @edu.umd.cs.findbugs.annotations.SuppressWarnings(value = "RCN_REDUNDANT_NULLCHECK_OF_NONNULL_VALUE",
+                justification = "migration of legacy data")
         public Collection<? extends Action> getJobActions(LiterateBranchProject job) {
             if (jobActions == null) {
                 if (processes == null || processes.isEmpty()) {
