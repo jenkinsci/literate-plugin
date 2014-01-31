@@ -99,7 +99,7 @@ public class LiteratePromotionsBranchProperty extends LiterateBranchProperty {
 
     @NonNull
     public List<Promotion> getProcesses() {
-        return Collections.unmodifiableList(processes);
+        return processes == null ? Collections.<Promotion>emptyList() : Collections.unmodifiableList(processes);
     }
 
     @Extension
