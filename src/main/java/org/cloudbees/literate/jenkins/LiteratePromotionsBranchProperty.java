@@ -43,6 +43,7 @@ import org.cloudbees.literate.api.v1.ProjectModelRequest;
 import org.cloudbees.literate.api.v1.TaskCommands;
 import org.kohsuke.stapler.DataBoundConstructor;
 
+import java.io.ObjectStreamException;
 import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -200,7 +201,7 @@ public class LiteratePromotionsBranchProperty extends LiterateBranchProperty {
         @Override
         public Collection<? extends Action> getJobActions(LiterateBranchProject job) {
             if (jobActions == null) {
-                if (processes.isEmpty()) {
+                if (processes == null || processes.isEmpty()) {
                     jobActions = Collections.emptyList();
                 } else {
                     jobActions = Collections.singleton(new PromotionProjectAction(this));
@@ -214,7 +215,7 @@ public class LiteratePromotionsBranchProperty extends LiterateBranchProperty {
         }
 
         public List<Promotion> getProcesses() {
-            return processes;
+            return processes == null ? Collections.<Promotion>emptyList() : Collections.unmodifiableList(processes);
         }
 
         public ProjectModel getModel(LiterateBranchBuild build) {

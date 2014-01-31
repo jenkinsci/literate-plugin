@@ -74,7 +74,7 @@ public class LiterateMultibranchProject extends
     /**
      * The default marker file.
      */
-    private static final String DEFAULT_MARKER_FILE = ".cloudbees.md";
+    private static final String DEFAULT_MARKER_FILE = "cloudbees";
 
     /**
      * The name of the marker file.
