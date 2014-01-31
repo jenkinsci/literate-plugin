@@ -49,6 +49,7 @@ import jenkins.scm.api.SCMSource;
 import jenkins.scm.api.SCMSourceCriteria;
 import net.sf.json.JSONObject;
 import org.apache.commons.lang.StringUtils;
+import org.cloudbees.literate.api.v1.ProjectModelSource;
 import org.kohsuke.stapler.DataBoundConstructor;
 import org.kohsuke.stapler.StaplerRequest;
 import org.kohsuke.stapler.StaplerResponse;
@@ -57,6 +58,7 @@ import javax.servlet.ServletException;
 import java.io.IOException;
 import java.text.MessageFormat;
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.Collections;
 import java.util.Iterator;
 import java.util.List;
@@ -181,13 +183,16 @@ public class LiterateMultibranchProject extends
      */
     @Override
     public SCMSourceCriteria getSCMSourceCriteria(@NonNull SCMSource source) {
+        final Collection<String> markerFiles = new ProjectModelSource(LiterateBranchProject.class.getClassLoader())
+                .markerFiles(getMarkerFile());
         return new SCMSourceCriteria() {
             public boolean isHead(@NonNull Probe probe, @NonNull TaskListener listener) throws IOException {
-                final String markerFile = getMarkerFile();
-                if (probe.exists(markerFile)) {
-                    return true;
+                for (String markerFile : markerFiles) {
+                    if (probe.exists(markerFile)) {
+                        return true;
+                    }
+                    listener.getLogger().println(MessageFormat.format("No {0} marker file", markerFile));
                 }
-                listener.getLogger().println(MessageFormat.format("No {0} marker file", markerFile));
                 return false;
             }
         };
