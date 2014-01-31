@@ -267,11 +267,11 @@ public class LiteratePromotionsBranchProperty extends LiterateBranchProperty {
         }
 
         public String getDisplayName() {
-            return "Promotions";
+            return "Promotion Status";
         }
 
         public String getUrlName() {
-            return "promotions";
+            return "promotion";
         }
 
         public JobPropertyImpl getJobProperty() {
