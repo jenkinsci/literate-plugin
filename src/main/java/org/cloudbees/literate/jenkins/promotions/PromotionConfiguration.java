@@ -34,6 +34,8 @@ import org.apache.commons.lang.StringUtils;
 import org.kohsuke.stapler.DataBoundConstructor;
 
 import java.io.Serializable;
+import java.util.LinkedHashSet;
+import java.util.Set;
 import java.util.logging.Logger;
 
 /**
@@ -70,6 +72,90 @@ public class PromotionConfiguration extends AbstractDescribableImpl<PromotionCon
     @CheckForNull
     public String getEnvironment() {
         return environment;
+    }
+
+    @CheckForNull
+    public Set<String> asEnvironments() {
+        return asEnvironments(environment);
+    }
+
+    @CheckForNull
+    public static Set<String> asEnvironments(String environment) {
+        if (StringUtils.isBlank(environment)) {
+            return null;
+        }
+        Set<String> result = new LinkedHashSet<String>();
+        StringBuilder builder = new StringBuilder();
+        Character inQuote = null;
+        boolean inEscape = false;
+        for (int i = 0; i < environment.length(); i++) {
+            char c = environment.charAt(i);
+            switch (c) {
+                case '\\':
+                    if (inEscape) {
+                        builder.append(c);
+                        inEscape = false;
+                    } else {
+                        inEscape = true;
+                    }
+                    break;
+                case '\'':
+                case '`':
+                case '"':
+                    if (inEscape) {
+                        builder.append(c);
+                        inEscape = false;
+                        break;
+                    }
+                    if (inQuote == null) {
+                        inQuote = c;
+                        break;
+                    }
+                    if (inQuote == c) {
+                        if (builder.length() > 0) {
+                            result.add(builder.toString());
+                        }
+                        builder.setLength(0);
+                        inQuote = null;
+                        break;
+                    }
+                    builder.append(c);
+                    break;
+                case ' ':
+                case ',':
+                case '\n':
+                case '\r':
+                case '\t':
+                case '\f':
+                case '\b':
+                    if (inEscape) {
+                        builder.append(c);
+                        inEscape = false;
+                        break;
+                    }
+                    if (inQuote == null) {
+                        if (builder.length() > 0) {
+                            result.add(builder.toString());
+                        }
+                        builder.setLength(0);
+                        break;
+                    }
+                    builder.append(c);
+                    break;
+
+                default:
+                    inEscape = false;
+                    builder.append(c);
+                    break;
+            }
+        }
+        if (builder.length() > 0) {
+            result.add(builder.toString());
+        }
+        if (result.isEmpty()) {
+            return null;
+        }
+        return result;
     }
 
     @Override

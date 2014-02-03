@@ -57,6 +57,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 import java.util.concurrent.Future;
 import java.util.logging.Logger;
 
@@ -141,15 +142,10 @@ public class PromotionProject
 
     @Override
     public Label getAssignedLabel() {
-        // TODO properly parse the string to ensure quoting of environment segments is handled
-        String environment = configuration.getEnvironment();
-        if (StringUtils.isBlank(environment)) return null;
-        List<String> environments = new ArrayList<String>();
-        for (String s: environment.split("[,\\s]+")) {
-            if (StringUtils.isNotBlank(s)) environments.add(s.trim());
-        }
-        if (environments.isEmpty()) return null;
-        return getOwner().getParent().getEnvironmentMapper().getLabel(new BuildEnvironment(new HashSet<String>(environments)));
+        Set<String> environment = configuration.asEnvironments();
+        return environment == null
+                ? null
+                : getOwner().getParent().getEnvironmentMapper().getLabel(new BuildEnvironment(environment));
     }
 
     @Override
