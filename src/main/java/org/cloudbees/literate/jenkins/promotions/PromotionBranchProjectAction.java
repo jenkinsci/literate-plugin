@@ -113,8 +113,6 @@ public class PromotionBranchProjectAction implements ProminentProjectAction, Per
         return r;
     }
 
-    // TODO whatever you want
-
     public String getIconFileName() {
         return "star.png";
     }

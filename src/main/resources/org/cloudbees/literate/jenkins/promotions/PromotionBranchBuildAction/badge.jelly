@@ -3,7 +3,7 @@
     <j:forEach var="status" items="${it.getPromotions()}">
       <a href="${link}promotion/">
         <img width="16" height="16"
-          title="${status.name}"
+          title="${status.promotionProcess.displayName}"
           src="${rootURL}${status.getIcon('16x16')}"/>
       </a>
     </j:forEach>

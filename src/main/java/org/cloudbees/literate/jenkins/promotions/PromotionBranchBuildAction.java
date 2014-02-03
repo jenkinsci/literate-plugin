@@ -247,7 +247,7 @@ public class PromotionBranchBuildAction implements BuildBadgeAction {
         if(p==null)
             throw new IllegalStateException("This project doesn't have the promotion criterion called "+name);
 
-        p.promote(owner,new Cause.UserCause()); // TOTO: add badge
+        p.promote(owner,new Cause.UserCause(), new ManualPromotionBadge());
 
         return HttpResponses.redirectToDot();
     }

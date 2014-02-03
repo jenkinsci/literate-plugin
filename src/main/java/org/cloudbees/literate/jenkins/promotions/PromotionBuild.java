@@ -23,19 +23,26 @@
  */
 package org.cloudbees.literate.jenkins.promotions;
 
+import hudson.AbortException;
 import hudson.EnvVars;
 import hudson.console.HyperlinkNote;
 import hudson.model.AbstractBuild;
+import hudson.model.AbstractProject;
 import hudson.model.BuildListener;
 import hudson.model.Node;
 import hudson.model.Result;
 import hudson.model.TaskListener;
 import hudson.model.TopLevelItem;
+import hudson.model.listeners.SCMListener;
+import hudson.scm.ChangeLogSet;
+import hudson.scm.NullChangeLogParser;
+import hudson.scm.SCM;
 import hudson.security.Permission;
 import hudson.security.PermissionGroup;
 import hudson.security.PermissionScope;
 import hudson.slaves.WorkspaceList;
 import hudson.tasks.BuildStep;
+import hudson.util.IOException2;
 import jenkins.model.Jenkins;
 import org.cloudbees.literate.api.v1.ProjectModel;
 import org.cloudbees.literate.api.v1.TaskCommands;
@@ -46,6 +53,8 @@ import org.kohsuke.stapler.export.Exported;
 
 import java.io.File;
 import java.io.IOException;
+import java.io.InterruptedIOException;
+import java.lang.ref.WeakReference;
 import java.util.Calendar;
 import java.util.List;
 import java.util.Map;

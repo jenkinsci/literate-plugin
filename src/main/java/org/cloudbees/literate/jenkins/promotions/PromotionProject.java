@@ -26,10 +26,13 @@ package org.cloudbees.literate.jenkins.promotions;
 import edu.umd.cs.findbugs.annotations.CheckForNull;
 import edu.umd.cs.findbugs.annotations.NonNull;
 import hudson.Extension;
+import hudson.FilePath;
+import hudson.Launcher;
 import hudson.Util;
 import hudson.model.AbstractBuild;
 import hudson.model.AbstractProject;
 import hudson.model.Action;
+import hudson.model.BuildListener;
 import hudson.model.Cause;
 import hudson.model.DependencyGraph;
 import hudson.model.Describable;
@@ -43,16 +46,27 @@ import hudson.model.PermalinkProjectAction;
 import hudson.model.Queue;
 import hudson.model.Run;
 import hudson.model.Saveable;
+import hudson.model.TaskListener;
+import hudson.scm.SCM;
 import hudson.tasks.Publisher;
 import hudson.util.DescribableList;
+import jenkins.branch.Branch;
 import jenkins.model.Jenkins;
+import jenkins.scm.api.SCMHead;
+import jenkins.scm.api.SCMRevision;
+import jenkins.scm.api.SCMRevisionAction;
+import jenkins.scm.api.SCMSource;
 import net.jcip.annotations.Immutable;
 import org.apache.commons.lang.StringUtils;
 import org.cloudbees.literate.jenkins.BuildEnvironment;
 import org.cloudbees.literate.jenkins.LiterateBranchBuild;
 import org.cloudbees.literate.jenkins.LiterateBranchProject;
+import org.cloudbees.literate.jenkins.ParentLiterateBranchBuildAction;
 
+import java.io.File;
 import java.io.IOException;
+import java.lang.reflect.InvocationTargetException;
+import java.lang.reflect.Method;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashSet;
@@ -128,6 +142,64 @@ public class PromotionProject
     @Override
     protected Class<PromotionBuild> getBuildClass() {
         return PromotionBuild.class;
+    }
+
+    @Override
+    public SCM getScm() {
+        return getParent().getOwner().getScm();
+    }
+
+    @Override
+    public boolean checkout(AbstractBuild build, Launcher launcher, BuildListener listener, File changelogFile)
+            throws IOException, InterruptedException {
+        if (build instanceof PromotionBuild) {
+            LiterateBranchBuild parentBuild = ((PromotionBuild) build).getTarget();
+            SCMRevisionAction hashAction = parentBuild != null
+                    ? parentBuild.getAction(SCMRevisionAction.class)
+                    : null;
+            if (hashAction != null) {
+                Branch branch = parentBuild.getParent().getBranch();
+                SCMSource source = parentBuild.getParent().getParent().getSCMSource(branch.getSourceId());
+                if (source != null) {
+                    SCMRevision revisionHash = hashAction.getRevision();
+                    SCMHead head = revisionHash.getHead();
+                    SCM scm = source.build(head, revisionHash);
+
+                    FilePath workspace = build.getWorkspace();
+                    assert workspace != null : "we are in a build so must have a workspace";
+                    workspace.mkdirs();
+
+                    boolean r = scm.checkout(build, launcher, workspace, listener, changelogFile);
+                    if (r) {
+                        // Only calcRevisionsFromBuild if checkout was successful. Note that modern SCM implementations
+                        // won't reach this line anyway, as they throw AbortExceptions on checkout failure.
+                        calcPollingBaseline(build, launcher, listener);
+                    }
+                    return r;
+                }
+            }
+        }
+        listener.getLogger().println("Could not check out exact revision, falling back to current");
+        return super.checkout(build, launcher, listener, changelogFile);
+    }
+
+    /**
+     * We all hate monkey patching!
+     */
+    private void calcPollingBaseline(AbstractBuild build, Launcher launcher, TaskListener listener)
+            throws IOException, InterruptedException {
+        try {
+            Method superMethod = AbstractProject.class
+                    .getDeclaredMethod("calcPollingBaseline", AbstractBuild.class, Launcher.class, TaskListener.class);
+            superMethod.setAccessible(true);
+            superMethod.invoke(this, build, launcher, listener);
+        } catch (NoSuchMethodException e) {
+            // TODO remove screaming ugly hack when method is exposed in base Jenkins
+        } catch (InvocationTargetException e) {
+            // TODO remove screaming ugly hack when method is exposed in base Jenkins
+        } catch (IllegalAccessException e) {
+            // TODO remove screaming ugly hack when method is exposed in base Jenkins
+        }
     }
 
     /**
