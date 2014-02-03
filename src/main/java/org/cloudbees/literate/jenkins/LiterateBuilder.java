@@ -150,7 +150,12 @@ public class LiterateBuilder extends Builder {
         if (commands == null || commands.isEmpty()) {
             throw new AbortException("No build command defined for environment: " + environment.getLabels());
         }
+        return perform(build, launcher, listener, envVars, commands);
+    }
 
+    public static boolean perform(AbstractBuild<?, ?> build, Launcher launcher, BuildListener listener,
+                                  EnvVars envVars, List<String> commands)
+            throws IOException, InterruptedException {
         String extension = launcher.isUnix() ? ".sh" : ".bat";
         for (String command : commands) {
             String contents;

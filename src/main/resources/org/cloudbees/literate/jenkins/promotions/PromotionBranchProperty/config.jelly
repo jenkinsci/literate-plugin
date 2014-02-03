@@ -24,7 +24,7 @@
 <?jelly escape-by-default='true'?>
 <j:jelly xmlns:j="jelly:core" xmlns:st="jelly:stapler" xmlns:d="jelly:define" xmlns:l="/lib/layout" xmlns:t="/lib/hudson" xmlns:f="/lib/form">
   <f:entry title="${%Processes}" field="processes">
-    <f:repeatable field="processes" header="${%Promotion}" add="${%Add promotion}">
+    <f:repeatable field="configurations" header="${%Promotion}" add="${%Add promotion}">
       <table style="width:100%">
         <st:include page="config.jelly" class="${descriptor.clazz}" />
       </table>

@@ -31,7 +31,7 @@
       <!-- list promotions that are already attained -->
       <j:forEach var="c" items="${it.jobProperty.processes}">
         <h2>
-          <img src="${imagesURL}/32x32/star.png"/>
+          <img src="${imagesURL}/32x32/star.png"/> <st:nbsp/>
           <a href="process/${c.name}" class="model-link">${c.displayName}</a>
         </h2>
 
