@@ -69,6 +69,7 @@ import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
@@ -83,12 +84,35 @@ public class PromotionProject
         extends AbstractProject<PromotionProject, PromotionBuild>
         implements Saveable, Describable<PromotionProject> {
     private static final Logger LOGGER = Logger.getLogger(PromotionProject.class.getName());
+
+    /*package*/ static final List<String> ICON_NAMES = Arrays.asList(
+            "star-gold",
+            "star-silver",
+            "star-blue",
+            "star-red",
+            "star-green",
+            "star-purple",
+            "star-gold-w",
+            "star-silver-w",
+            "star-blue-w",
+            "star-red-w",
+            "star-green-w",
+            "star-purple-w"
+    );
+
     @NonNull
     private final PromotionConfiguration configuration;
+
+    private transient volatile String iconName;
 
     public PromotionProject(ItemGroup owner, PromotionConfiguration configuration) {
         super(owner, configuration.getName());
         this.configuration = configuration;
+    }
+
+    @Override
+    public String getPronoun() {
+        return "Promotion";
     }
 
     @NonNull
@@ -233,7 +257,26 @@ public class PromotionProject
      * @return the icon name
      */
     public String getIcon() {
-        return "star-gold";
+        String iconName = this.iconName;
+        if (StringUtils.isBlank(iconName)) {
+            int index = 0;
+            iconName = "star-unknown";
+            for (PromotionConfiguration p : getParent().getProcesses()) {
+                if (configuration.equals(p)) {
+                    iconName = ICON_NAMES.get(index % ICON_NAMES.size());
+                    break;
+                }
+                index++;
+            }
+            this.iconName = iconName;
+        }
+        return iconName;
+    }
+
+    public String getEmptyIcon() {
+        String baseName = getIcon();
+        baseName = (baseName.endsWith("-w") ? baseName.substring(0, baseName.length() - 2) : baseName) + "-e";
+        return baseName;
     }
 
     public void promote(LiterateBranchBuild build, Cause cause, PromotionBadge... badges) throws IOException {

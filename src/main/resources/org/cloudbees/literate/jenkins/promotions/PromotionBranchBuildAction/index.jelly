@@ -83,7 +83,7 @@
       <!-- list promotions that are not yet attained -->
       <j:forEach var="p" items="${it.pendingPromotions}">
         <h2>
-          <img src="${imagesURL}/32x32/star.png"/> ${p.displayName}
+          <img src="${resURL}/plugin/literate/images/32x32/${p.emptyIcon}.png"/> ${p.displayName}
         </h2>
           <j:choose>
             <j:when test="${it.getPromotionProcess(p.name)!=null and it.canPromote()}">

@@ -115,7 +115,23 @@ public class PromotionStatus {
      * Gets the icon that should represent this promotion (that is potentially attempted but failed.)
      */
     public String getIcon(String size) {
-        return Jenkins.RESOURCE_PATH + "/plugin/promoted-builds/icons/" + size + "/star-gold.png";
+        String baseName;
+
+        PromotionProject p = getPromotionProcess();
+        if (p == null) {
+            // promotion process undefined (perhaps deleted?). fallback to the default icon
+            baseName = PromotionProject.ICON_NAMES.get(0);
+        } else {
+            PromotionBuild l = getLast();
+            if (l != null && (l.isBuilding() || l.getResult() == null)) {
+                baseName = p.getEmptyIcon();
+            } else if (l != null && l.getResult() != Result.SUCCESS) {
+                return Jenkins.RESOURCE_PATH + "/images/" + size + "/error.png";
+            } else {
+                baseName = p.getIcon();
+            }
+        }
+        return Jenkins.RESOURCE_PATH + "/plugin/literate/images/" + size + "/" + baseName + ".png";
     }
 
     /**
@@ -156,7 +172,7 @@ public class PromotionStatus {
     }
 
     public boolean isFor(PromotionProject process) {
-        return process.getName().equals(this.name);
+        return process != null && process.getName().equals(this.name);
     }
 
     /**

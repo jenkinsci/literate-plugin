@@ -29,15 +29,15 @@
       <h1>Promotions</h1>
 
       <!-- list promotions that are already attained -->
-      <j:forEach var="c" items="${it.jobProperty.processes}">
+      <j:forEach var="c" items="${it.processes}">
         <h2>
-          <img src="${imagesURL}/32x32/star.png"/> <st:nbsp/>
+          <img src="${resURL}/plugin/literate/images/32x32/${c.icon}.png"/> <st:nbsp/>
           <a href="process/${c.name}" class="model-link">${c.displayName}</a>
         </h2>
 
         <!-- history of this promotion process -->
         <l:pane title="${%Promotion History}" width="90">
-          <j:forEach var="attempt" items="${it.getPromotionsSummary(c)}">
+          <j:forEach var="attempt" items="${it.getPromotionsSummary(p)}">
             <tr>
               <td>
                 <a href="../${attempt.target.number}/promotion/${c.name}/promotionBuild/${attempt.number}/"

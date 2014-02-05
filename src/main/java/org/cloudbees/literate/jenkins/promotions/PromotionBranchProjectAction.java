@@ -33,6 +33,7 @@ import org.kohsuke.stapler.export.Exported;
 
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.Comparator;
 import java.util.List;
 import java.util.logging.Logger;
 
@@ -56,7 +57,30 @@ public class PromotionBranchProjectAction implements ProminentProjectAction, Per
 
     @Exported
     public List<PromotionProject> getProcesses() {
-        return property.getItems();
+        List<PromotionProject> result = new ArrayList<PromotionProject>(property.getItems());
+        Collections.sort(result, new Comparator<PromotionProject>() {
+            List<PromotionConfiguration> processes = property.getProcesses();
+
+            public int compare(PromotionProject o1, PromotionProject o2) {
+                int i1 = Integer.MAX_VALUE;
+                int i2 = Integer.MAX_VALUE;
+                PromotionConfiguration c1 = o1.getConfiguration();
+                PromotionConfiguration c2 = o2.getConfiguration();
+                int i = 0;
+                for (PromotionConfiguration c : processes) {
+                    if (c.equals(c1)) {
+                        i1 = i;
+                    } else if (c.equals(c2)) {
+                        i2 = i;
+                    } else if (i1 != Integer.MAX_VALUE && i2 != Integer.MAX_VALUE) {
+                        break;
+                    }
+                    i++;
+                }
+                return Integer.compare(i1, i2);
+            }
+        });
+        return result;
     }
 
     public PromotionProject getProcess(String name) {

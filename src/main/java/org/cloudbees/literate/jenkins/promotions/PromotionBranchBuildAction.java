@@ -40,6 +40,7 @@ import org.kohsuke.stapler.interceptor.RequirePOST;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.Comparator;
 import java.util.List;
 import java.util.logging.Logger;
 
@@ -122,7 +123,34 @@ public class PromotionBranchBuildAction implements BuildBadgeAction {
      */
     @Exported
     public List<PromotionStatus> getPromotions() {
-        return statuses.getView();
+        List<PromotionStatus> result = new ArrayList<PromotionStatus>(statuses.getView());
+        final PromotionJobProperty property =
+                getProject() != null ? getProject().getProperty(PromotionJobProperty.class) : null;
+        if (property != null) {
+            Collections.sort(result, new Comparator<PromotionStatus>() {
+                List<PromotionConfiguration> processes = property.getProcesses();
+
+                public int compare(PromotionStatus o1, PromotionStatus o2) {
+                    int i1 = Integer.MAX_VALUE;
+                    int i2 = Integer.MAX_VALUE;
+                    PromotionConfiguration c1 = o1.getPromotionProcess().getConfiguration();
+                    PromotionConfiguration c2 = o2.getPromotionProcess().getConfiguration();
+                    int i = 0;
+                    for (PromotionConfiguration c : processes) {
+                        if (c.equals(c1)) {
+                            i1 = i;
+                        } else if (c.equals(c2)) {
+                            i2 = i;
+                        } else if (i1 != Integer.MAX_VALUE && i2 != Integer.MAX_VALUE) {
+                            break;
+                        }
+                        i++;
+                    }
+                    return Integer.compare(i1, i2);
+                }
+            });
+        }
+        return result;
     }
 
     /**
@@ -167,7 +195,7 @@ public class PromotionBranchBuildAction implements BuildBadgeAction {
      * @return can be empty but never null.
      */
     public List<PromotionProject> getPendingPromotions() {
-        PromotionJobProperty pp = getProject().getProperty(PromotionJobProperty.class);
+        final PromotionJobProperty pp = getProject().getProperty(PromotionJobProperty.class);
         if (pp == null) {
             return Collections.emptyList();
         }
@@ -178,6 +206,28 @@ public class PromotionBranchBuildAction implements BuildBadgeAction {
                 r.add(p);
             }
         }
+        Collections.sort(r, new Comparator<PromotionProject>() {
+            List<PromotionConfiguration> processes = pp.getProcesses();
+
+            public int compare(PromotionProject o1, PromotionProject o2) {
+                int i1 = Integer.MAX_VALUE;
+                int i2 = Integer.MAX_VALUE;
+                PromotionConfiguration c1 = o1.getConfiguration();
+                PromotionConfiguration c2 = o2.getConfiguration();
+                int i = 0;
+                for (PromotionConfiguration c : processes) {
+                    if (c.equals(c1)) {
+                        i1 = i;
+                    } else if (c.equals(c2)) {
+                        i2 = i;
+                    } else if (i1 != Integer.MAX_VALUE && i2 != Integer.MAX_VALUE) {
+                        break;
+                    }
+                    i++;
+                }
+                return Integer.compare(i1, i2);
+            }
+        });
 
         return r;
     }
@@ -213,6 +263,9 @@ public class PromotionBranchBuildAction implements BuildBadgeAction {
     }
 
     private Object readResolve() {
+        if (statuses == null) {
+            return new PromotionBranchBuildAction(owner);
+        }
         // resurrect the parent pointer when read from disk
         for (PromotionStatus s : statuses) {
             s.parent = this;
