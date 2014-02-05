@@ -1,0 +1,11 @@
+<j:jelly xmlns:j="jelly:core" xmlns:st="jelly:stapler" xmlns:d="jelly:define" xmlns:l="/lib/layout" xmlns:t="/lib/hudson" xmlns:f="/lib/form">
+  <j:set var="o" value="${it.resolve()}"/>
+  <j:choose>
+    <j:when test="${o==null}">
+      ${%fromMissing(it.targetDisplayName)}
+    </j:when>
+    <j:otherwise>
+      ${%from(rootURL+'/'+o.url, o.displayName)}
+    </j:otherwise>
+  </j:choose>
+</j:jelly>

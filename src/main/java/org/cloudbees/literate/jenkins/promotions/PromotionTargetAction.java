@@ -23,11 +23,14 @@
  */
 package org.cloudbees.literate.jenkins.promotions;
 
+import hudson.model.BuildBadgeAction;
 import hudson.model.InvisibleAction;
 import jenkins.model.Jenkins;
 import org.cloudbees.literate.jenkins.LiterateBranchBuild;
 import org.cloudbees.literate.jenkins.LiterateBranchProject;
 import org.cloudbees.literate.jenkins.LiterateMultibranchProject;
+import org.kohsuke.stapler.Stapler;
+import org.kohsuke.stapler.StaplerRequest;
 
 import java.util.logging.Logger;
 
@@ -36,7 +39,7 @@ import java.util.logging.Logger;
  *
  * @author Kohsuke Kawaguchi
  */
-public class PromotionTargetAction extends InvisibleAction {
+public class PromotionTargetAction extends InvisibleAction implements BuildBadgeAction {
     private static final Logger LOGGER = Logger.getLogger(PromotionTargetAction.class.getName());
     private final String jobName;
     private final String branchName;
@@ -71,5 +74,21 @@ public class PromotionTargetAction extends InvisibleAction {
 
     public LiterateBranchBuild resolve(PromotionBuild parent) {
         return resolve(parent.getParent());
+    }
+
+    public LiterateBranchBuild resolveFromRequest() {
+        StaplerRequest current = Stapler.getCurrentRequest();
+        if (current == null) return null;
+        PromotionBuild promotionBuild = current.findAncestorObject(PromotionBuild.class);
+        if (promotionBuild == null) return null;
+        return resolve(promotionBuild);
+    }
+
+    public String getTargetDisplayName() {
+        return "#"+number;
+    }
+
+    public int getNumber() {
+        return number;
     }
 }
