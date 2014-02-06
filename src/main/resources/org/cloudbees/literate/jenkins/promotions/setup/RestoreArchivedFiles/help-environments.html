@@ -1,7 +1,7 @@
 <!--
  ~ The MIT License
  ~
- ~ Copyright (c) 2013, CloudBees, Inc.
+ ~ Copyright (c) 2014, CloudBees, Inc.
  ~
  ~ Permission is hereby granted, free of charge, to any person obtaining a copy
  ~ of this software and associated documentation files (the "Software"), to deal
@@ -21,25 +21,16 @@
  ~ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
  ~ THE SOFTWARE.
  -->
-<?jelly escape-by-default='true'?>
-<j:jelly xmlns:j="jelly:core" xmlns:st="jelly:stapler" xmlns:d="jelly:define" xmlns:l="/lib/layout" xmlns:t="/lib/hudson" xmlns:f="/lib/form">
-  <f:entry title="${%Name}" field="name">
-    <f:textbox/>
-  </f:entry>
-  <f:advanced>
-    <f:entry title="${%Display Name}" field="displayName">
-      <f:textbox/>
-    </f:entry>
-    <f:entry title="${%Environment}" field="environment">
-      <f:expandableTextbox/>
-    </f:entry>
-    <f:entry title="${%Setup steps}">
-      <f:repeatableHeteroProperty hasHeader="true" field="setupSteps" deleteCaption="${%Delete step}" addCaption="${%Add step}"/>
-    </f:entry>
-  </f:advanced>
-  <f:entry title="">
-     <div align="right">
-       <f:repeatableDeleteButton value="${%Delete promotion}" />
-     </div>
-   </f:entry>
-</j:jelly>
+<div>
+    If blank, archived artifacts from all environments will be restored.
+    <p/>
+    Where the same named artifact exists
+    in multiple environments, it is undefined as to exactly which of the duplicates will be restored.
+    <p/>
+    If non-blank, the value is treated as a list of environments from which to copy from. Environments can be
+    separated by whitespace or commas. If necessary <code>\</code> can be used to escape characters and
+    matching <code>"</code>, <code>'</code> or <code>`</code>s can be used to quote the environment.
+    For example, the value: <code>java, "maven 3.0.4" 'maven "2.2.1"', `maven \`any\``</code> will match any environment
+    build containing at least one of the components: <code>java</code>, <code>maven 3.0.4</code>,
+    <code>maven "2.2.1"</code> or <code>maven `any`</code>
+</div>

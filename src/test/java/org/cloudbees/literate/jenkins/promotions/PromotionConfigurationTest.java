@@ -51,6 +51,18 @@ public class PromotionConfigurationTest {
         assertThat(PromotionConfiguration.asEnvironments("`foo \"bar\" manchu\\``, ha"), is(asSet("foo \"bar\" manchu`", "ha")));
     }
 
+    @Test
+    public void asEnvironmentsString_smokes() throws Exception {
+        assertThat(PromotionConfiguration.asEnvironmentsString(null), nullValue());
+        assertThat(PromotionConfiguration.asEnvironmentsString(Collections.<String>emptySet()), nullValue());
+        assertThat(PromotionConfiguration.asEnvironmentsString(asSet("")), nullValue());
+        assertThat(PromotionConfiguration.asEnvironmentsString(asSet("","","","")), nullValue());
+        assertThat(PromotionConfiguration.asEnvironmentsString(Collections.singleton("foo")), is("foo"));
+        assertThat(PromotionConfiguration.asEnvironmentsString(asSet("foo", "bar")), is("foo bar"));
+        assertThat(PromotionConfiguration.asEnvironmentsString(asSet("foo bar")), is("\"foo bar\""));
+        assertThat(PromotionConfiguration.asEnvironmentsString(asSet("foo \"bar\" manchu`", "ha")), is("\"foo \\\"bar\\\" manchu\\`\" ha"));
+    }
+
     private static <T> Set<T> asSet(T... values) {
         return new LinkedHashSet<T>(Arrays.asList(values));
     }

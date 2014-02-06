@@ -249,7 +249,7 @@ public class PromotionJobProperty extends JobProperty<LiterateBranchProject> imp
             return null;
         }
         for (PromotionProject process : allProcesses) {
-            if (StringUtils.equals(process.getName(), name)) {
+            if (PromotionConfiguration.nameEquals(process.getName(), name)) {
                 return process;
             }
         }
@@ -311,6 +311,13 @@ public class PromotionJobProperty extends JobProperty<LiterateBranchProject> imp
         return processes == null
                 ? Collections.<PromotionConfiguration>emptyList()
                 : Collections.unmodifiableList(processes);
+    }
+
+    public PromotionConfiguration getProcess(String name) {
+        for (PromotionConfiguration c: getProcesses()) {
+            if (PromotionConfiguration.nameEquals(name, c.getName())) return c;
+        }
+        return null;
     }
 
     public ProjectModel getModel(LiterateBranchBuild build) {

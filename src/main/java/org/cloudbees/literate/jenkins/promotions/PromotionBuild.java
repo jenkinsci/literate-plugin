@@ -23,26 +23,19 @@
  */
 package org.cloudbees.literate.jenkins.promotions;
 
-import hudson.AbortException;
 import hudson.EnvVars;
 import hudson.console.HyperlinkNote;
 import hudson.model.AbstractBuild;
-import hudson.model.AbstractProject;
 import hudson.model.BuildListener;
 import hudson.model.Node;
 import hudson.model.Result;
 import hudson.model.TaskListener;
 import hudson.model.TopLevelItem;
-import hudson.model.listeners.SCMListener;
-import hudson.scm.ChangeLogSet;
-import hudson.scm.NullChangeLogParser;
-import hudson.scm.SCM;
 import hudson.security.Permission;
 import hudson.security.PermissionGroup;
 import hudson.security.PermissionScope;
 import hudson.slaves.WorkspaceList;
 import hudson.tasks.BuildStep;
-import hudson.util.IOException2;
 import jenkins.model.Jenkins;
 import org.cloudbees.literate.api.v1.ProjectModel;
 import org.cloudbees.literate.api.v1.TaskCommands;
@@ -53,8 +46,6 @@ import org.kohsuke.stapler.export.Exported;
 
 import java.io.File;
 import java.io.IOException;
-import java.io.InterruptedIOException;
-import java.lang.ref.WeakReference;
 import java.util.Calendar;
 import java.util.List;
 import java.util.Map;
@@ -194,7 +185,7 @@ public class PromotionBuild extends AbstractBuild<PromotionProject, PromotionBui
                         + getParent().getConfiguration().getDisplayName()
                         + " (" + getParent().getConfiguration().getName() + ") promotion"
                 );
-                return Result.SUCCESS;
+                return Result.NOT_BUILT;
             }
 
             listener.getLogger().println(
@@ -204,6 +195,8 @@ public class PromotionBuild extends AbstractBuild<PromotionProject, PromotionBui
 
             // start with SUCCESS, unless someone makes it a failure
             setResult(Result.SUCCESS);
+            if(!setup(listener))
+                return Result.FAILURE;
 
             try {
                 if (!LiterateBuilder.perform(PromotionBuild.this, launcher, listener, getEnvironment(listener),
@@ -239,24 +232,10 @@ public class PromotionBuild extends AbstractBuild<PromotionProject, PromotionBui
             }
         }
 
-        private boolean build(final BuildListener listener,
-                              final List<BuildStep> steps)
-                throws IOException, InterruptedException {
-            for (BuildStep bs : steps) {
-                if (!bs.perform(PromotionBuild.this, launcher, listener)) {
-                    listener.getLogger().println("failed build " + bs + " " + getResult());
-                    return false;
-                } else {
-                    listener.getLogger().println("build " + bs + " " + getResult());
-                }
-            }
-            return true;
-        }
-
-        private boolean preBuild(BuildListener listener, List<BuildStep> steps) {
-            for (BuildStep bs : steps) {
-                if (!bs.prebuild(PromotionBuild.this, listener)) {
-                    listener.getLogger().println("failed pre build " + bs + " " + getResult());
+        private boolean setup(BuildListener listener) throws InterruptedException {
+            for (PromotionSetup setup: PromotionBuild.this.getProject().getConfiguration().getSetupSteps()) {
+                if (!setup.setup(PromotionBuild.this, listener)) {
+                    listener.getLogger().println("failed setup " + setup + " " + getResult());
                     return false;
                 }
             }

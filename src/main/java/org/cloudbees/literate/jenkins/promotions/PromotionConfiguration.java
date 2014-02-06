@@ -29,19 +29,20 @@ import hudson.Extension;
 import hudson.model.AbstractDescribableImpl;
 import hudson.model.Descriptor;
 import hudson.model.ModelObject;
-import net.jcip.annotations.Immutable;
 import org.apache.commons.lang.StringUtils;
 import org.kohsuke.stapler.DataBoundConstructor;
 
 import java.io.Serializable;
+import java.util.Arrays;
+import java.util.Collections;
 import java.util.LinkedHashSet;
+import java.util.List;
 import java.util.Set;
 import java.util.logging.Logger;
 
 /**
  * @author Stephen Connolly
  */
-@Immutable
 public class PromotionConfiguration extends AbstractDescribableImpl<PromotionConfiguration>
         implements Serializable, ModelObject {
     private static final Logger LOGGER = Logger.getLogger(PromotionConfiguration.class.getName());
@@ -51,32 +52,56 @@ public class PromotionConfiguration extends AbstractDescribableImpl<PromotionCon
     private final String displayName;
     @CheckForNull
     private final String environment;
+    @CheckForNull
+    private final PromotionSetup[] setupSteps;
 
     @DataBoundConstructor
-    public PromotionConfiguration(String name, String displayName, String environment) {
+    public PromotionConfiguration(String name, String displayName, String environment, PromotionSetup[] setupSteps) {
         this.name = name;
         this.displayName = displayName;
-        this.environment = environment;
+        this.environment = normalizeEnvironment(environment);
+        this.setupSteps = setupSteps;
     }
 
-    @NonNull
-    public String getName() {
-        return name;
-    }
-
-    @NonNull
-    public String getDisplayName() {
-        return StringUtils.defaultIfBlank(displayName, name);
+    public static String normalizeEnvironment(String environment) {
+        return asEnvironmentsString(asEnvironments(environment));
     }
 
     @CheckForNull
-    public String getEnvironment() {
-        return environment;
-    }
-
-    @CheckForNull
-    public Set<String> asEnvironments() {
-        return asEnvironments(environment);
+    public static String asEnvironmentsString(Set<String> environments) {
+        if (environments == null || environments.isEmpty()) {
+            return null;
+        }
+        StringBuilder builder = new StringBuilder();
+        boolean first = true;
+        for (String environment : environments) {
+            if (StringUtils.isBlank(environment)) {
+                continue;
+            }
+            if (first) {
+                first = false;
+            } else {
+                builder.append(' ');
+            }
+            if (environment.indexOf('"') != -1
+                    || environment.indexOf('\'') != -1
+                    || environment.indexOf('`') != -1
+                    || environment.indexOf(' ') != -1
+                    || environment.indexOf(',') != -1
+                    || environment.indexOf('\\') != -1
+                    || environment.indexOf('\n') != -1
+                    || environment.indexOf('\r') != -1
+                    || environment.indexOf('\t') != -1
+                    || environment.indexOf('\f') != -1
+                    || environment.indexOf('\b') != -1) {
+                builder.append('"');
+                builder.append(environment.replaceAll("[`\'\"\n\r\t\f\b\\\\]", "\\\\$0"));
+                builder.append('"');
+            } else {
+                builder.append(environment);
+            }
+        }
+        return first ? null : builder.toString();
     }
 
     @CheckForNull
@@ -158,32 +183,69 @@ public class PromotionConfiguration extends AbstractDescribableImpl<PromotionCon
         return result;
     }
 
-    @Override
-    public boolean equals(Object o) {
-        if (this == o) {
-            return true;
-        }
-        if (o == null || getClass() != o.getClass()) {
-            return false;
-        }
-
-        PromotionConfiguration promotion = (PromotionConfiguration) o;
-
-        if (environment != null ? !environment.equals(promotion.environment) : promotion.environment != null) {
-            return false;
-        }
-        if (!name.equals(promotion.name)) {
-            return false;
-        }
-
-        return true;
+    public static boolean equals(PromotionConfiguration c1, PromotionConfiguration c2) {
+        return nameEquals(c1.getName(), c2.getName());
     }
 
-    @Override
-    public int hashCode() {
-        int result = name.hashCode();
-        result = 31 * result + (environment != null ? environment.hashCode() : 0);
-        return result;
+    public static int compare(PromotionConfiguration c1, PromotionConfiguration c2) {
+        return nameCompare(c1.getName(), c2.getName());
+    }
+
+    public static int compare(PromotionConfiguration c1, PromotionConfiguration c2,
+                              Iterable<PromotionConfiguration> sequence) {
+        return nameCompare(c1.getName(), c2.getName(), sequence);
+    }
+
+    public static boolean nameEquals(String n1, String n2) {
+        return StringUtils.equalsIgnoreCase(n1, n2);
+    }
+
+    public static int nameCompare(String n1, String n2) {
+        return n1.compareToIgnoreCase(n2);
+    }
+
+    public static int nameCompare(String n1, String n2, Iterable<PromotionConfiguration> sequence) {
+        int i1 = Integer.MAX_VALUE;
+        int i2 = Integer.MAX_VALUE;
+        int i = 0;
+        for (PromotionConfiguration c : sequence) {
+            String n = c.getName();
+            if (PromotionConfiguration.nameEquals(n, n1)) {
+                i1 = i;
+            } else if (PromotionConfiguration.nameEquals(n, n2)) {
+                i2 = i;
+            } else if (i1 != Integer.MAX_VALUE && i2 != Integer.MAX_VALUE) {
+                break;
+            }
+            i++;
+        }
+        int rv = Integer.compare(i1, i2);
+        return rv == 0 ? nameCompare(n1, n2) : rv;
+    }
+
+    @NonNull
+    public String getName() {
+        return name;
+    }
+
+    @NonNull
+    public String getDisplayName() {
+        return StringUtils.defaultIfBlank(displayName, name);
+    }
+
+    @CheckForNull
+    public String getEnvironment() {
+        return environment;
+    }
+
+    @CheckForNull
+    public Set<String> asEnvironments() {
+        return asEnvironments(environment);
+    }
+
+    @NonNull
+    public List<PromotionSetup> getSetupSteps() {
+        return setupSteps == null ? Collections.<PromotionSetup>emptyList() : Arrays.asList(setupSteps);
     }
 
     @Extension

@@ -43,6 +43,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Calendar;
 import java.util.Collection;
+import java.util.Comparator;
 import java.util.GregorianCalendar;
 import java.util.List;
 import java.util.concurrent.Future;
@@ -126,7 +127,11 @@ public class PromotionStatus {
             if (l != null && (l.isBuilding() || l.getResult() == null)) {
                 baseName = p.getEmptyIcon();
             } else if (l != null && l.getResult() != Result.SUCCESS) {
-                return Jenkins.RESOURCE_PATH + "/images/" + size + "/error.png";
+                if (l.getResult() == Result.NOT_BUILT) {
+                    baseName = p.getEmptyIcon();
+                } else {
+                    return Jenkins.RESOURCE_PATH + "/images/" + size + "/error.png";
+                }
             } else {
                 baseName = p.getIcon();
             }
@@ -325,4 +330,15 @@ public class PromotionStatus {
     }
 
 
+    public static class ComparatorImpl implements Comparator<PromotionStatus> {
+        Iterable<PromotionConfiguration> processes;
+
+        public ComparatorImpl(Iterable<PromotionConfiguration> processes) {
+            this.processes = processes;
+        }
+
+        public int compare(PromotionStatus o1, PromotionStatus o2) {
+            return PromotionConfiguration.compare(o1.getPromotionProcess().getConfiguration(), o2.getPromotionProcess().getConfiguration());
+        }
+    }
 }

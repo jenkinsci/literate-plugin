@@ -40,7 +40,6 @@ import org.kohsuke.stapler.interceptor.RequirePOST;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collections;
-import java.util.Comparator;
 import java.util.List;
 import java.util.logging.Logger;
 
@@ -127,28 +126,7 @@ public class PromotionBranchBuildAction implements BuildBadgeAction {
         final PromotionJobProperty property =
                 getProject() != null ? getProject().getProperty(PromotionJobProperty.class) : null;
         if (property != null) {
-            Collections.sort(result, new Comparator<PromotionStatus>() {
-                List<PromotionConfiguration> processes = property.getProcesses();
-
-                public int compare(PromotionStatus o1, PromotionStatus o2) {
-                    int i1 = Integer.MAX_VALUE;
-                    int i2 = Integer.MAX_VALUE;
-                    PromotionConfiguration c1 = o1.getPromotionProcess().getConfiguration();
-                    PromotionConfiguration c2 = o2.getPromotionProcess().getConfiguration();
-                    int i = 0;
-                    for (PromotionConfiguration c : processes) {
-                        if (c.equals(c1)) {
-                            i1 = i;
-                        } else if (c.equals(c2)) {
-                            i2 = i;
-                        } else if (i1 != Integer.MAX_VALUE && i2 != Integer.MAX_VALUE) {
-                            break;
-                        }
-                        i++;
-                    }
-                    return Integer.compare(i1, i2);
-                }
-            });
+            Collections.sort(result, new PromotionStatus.ComparatorImpl(property.getProcesses()));
         }
         return result;
     }
@@ -206,28 +184,7 @@ public class PromotionBranchBuildAction implements BuildBadgeAction {
                 r.add(p);
             }
         }
-        Collections.sort(r, new Comparator<PromotionProject>() {
-            List<PromotionConfiguration> processes = pp.getProcesses();
-
-            public int compare(PromotionProject o1, PromotionProject o2) {
-                int i1 = Integer.MAX_VALUE;
-                int i2 = Integer.MAX_VALUE;
-                PromotionConfiguration c1 = o1.getConfiguration();
-                PromotionConfiguration c2 = o2.getConfiguration();
-                int i = 0;
-                for (PromotionConfiguration c : processes) {
-                    if (c.equals(c1)) {
-                        i1 = i;
-                    } else if (c.equals(c2)) {
-                        i2 = i;
-                    } else if (i1 != Integer.MAX_VALUE && i2 != Integer.MAX_VALUE) {
-                        break;
-                    }
-                    i++;
-                }
-                return Integer.compare(i1, i2);
-            }
-        });
+        Collections.sort(r, new PromotionProject.ComparatorImpl(pp.getProcesses()));
 
         return r;
     }
@@ -293,15 +250,18 @@ public class PromotionBranchBuildAction implements BuildBadgeAction {
         this.getProject().checkPermission(PromotionBuild.PROMOTE);
 
         PromotionJobProperty pp = getProject().getProperty(PromotionJobProperty.class);
-        if(pp==null)
+        if (pp == null) {
             throw new IllegalStateException("This project doesn't have any promotion criteria set");
+        }
 
         PromotionProject p = pp.getItem(name);
-        if(p==null)
-            throw new IllegalStateException("This project doesn't have the promotion criterion called "+name);
+        if (p == null) {
+            throw new IllegalStateException("This project doesn't have the promotion criterion called " + name);
+        }
 
-        p.promote(owner,new Cause.UserCause(), new ManualPromotionBadge());
+        p.promote(owner, new Cause.UserCause(), new ManualPromotionBadge());
 
         return HttpResponses.redirectToDot();
     }
+
 }

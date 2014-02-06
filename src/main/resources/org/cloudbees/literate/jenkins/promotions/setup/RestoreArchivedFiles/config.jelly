@@ -1,7 +1,7 @@
 <!--
  ~ The MIT License
  ~
- ~ Copyright (c) 2013, CloudBees, Inc.
+ ~ Copyright (c) 2014, CloudBees, Inc.
  ~
  ~ Permission is hereby granted, free of charge, to any person obtaining a copy
  ~ of this software and associated documentation files (the "Software"), to deal
@@ -23,23 +23,13 @@
  -->
 <?jelly escape-by-default='true'?>
 <j:jelly xmlns:j="jelly:core" xmlns:st="jelly:stapler" xmlns:d="jelly:define" xmlns:l="/lib/layout" xmlns:t="/lib/hudson" xmlns:f="/lib/form">
-  <f:entry title="${%Name}" field="name">
-    <f:textbox/>
+  <f:entry title="${%Includes}" field="includes">
+    <f:expandableTextbox/>
   </f:entry>
-  <f:advanced>
-    <f:entry title="${%Display Name}" field="displayName">
-      <f:textbox/>
-    </f:entry>
-    <f:entry title="${%Environment}" field="environment">
-      <f:expandableTextbox/>
-    </f:entry>
-    <f:entry title="${%Setup steps}">
-      <f:repeatableHeteroProperty hasHeader="true" field="setupSteps" deleteCaption="${%Delete step}" addCaption="${%Add step}"/>
-    </f:entry>
-  </f:advanced>
-  <f:entry title="">
-     <div align="right">
-       <f:repeatableDeleteButton value="${%Delete promotion}" />
-     </div>
-   </f:entry>
+  <f:entry title="${%Excludes}" field="excludes">
+    <f:expandableTextbox/>
+  </f:entry>
+  <f:entry title="${%Environments}" field="environments">
+    <f:expandableTextbox/>
+  </f:entry>
 </j:jelly>

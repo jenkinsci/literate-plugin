@@ -70,6 +70,7 @@ import java.lang.reflect.Method;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
+import java.util.Comparator;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
@@ -122,7 +123,7 @@ public class PromotionProject
 
     @NonNull
     public String getDisplayName() {
-        return StringUtils.defaultIfBlank(configuration.getDisplayName(), name);
+        return StringUtils.defaultIfBlank(getConfiguration().getDisplayName(), name);
     }
 
     @CheckForNull
@@ -132,7 +133,11 @@ public class PromotionProject
 
     @NonNull
     public PromotionConfiguration getConfiguration() {
-        return configuration;
+        if (getParent() == null) {
+            return configuration;
+        }
+        PromotionConfiguration c = getParent().getProcess(configuration.getName());
+        return c == null ? configuration : c;
     }
 
     /**
@@ -261,8 +266,9 @@ public class PromotionProject
         if (StringUtils.isBlank(iconName)) {
             int index = 0;
             iconName = "star-unknown";
+            String name = configuration.getName();
             for (PromotionConfiguration p : getParent().getProcesses()) {
-                if (configuration.equals(p)) {
+                if (PromotionConfiguration.nameEquals(name, p.getName())) {
                     iconName = ICON_NAMES.get(index % ICON_NAMES.size());
                     break;
                 }
@@ -408,6 +414,18 @@ public class PromotionProject
         @Override
         public String getDisplayName() {
             return "Promotion process";
+        }
+    }
+
+    public static class ComparatorImpl implements Comparator<PromotionProject> {
+        private final Iterable<PromotionConfiguration> processes;
+
+        public ComparatorImpl(Iterable<PromotionConfiguration> processes) {
+            this.processes = processes;
+        }
+
+        public int compare(PromotionProject o1, PromotionProject o2) {
+            return PromotionConfiguration.compare(o1.getConfiguration(), o2.getConfiguration(), processes);
         }
     }
 }
