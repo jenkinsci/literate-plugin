@@ -37,7 +37,7 @@
 
         <!-- history of this promotion process -->
         <l:pane title="${%Promotion History}" width="90">
-          <j:forEach var="attempt" items="${it.getPromotionsSummary(p)}">
+          <j:forEach var="attempt" items="${it.getPromotionsSummary(c)}">
             <tr>
               <td>
                 <a href="../${attempt.target.number}/promotion/${c.name}/promotionBuild/${attempt.number}/"
