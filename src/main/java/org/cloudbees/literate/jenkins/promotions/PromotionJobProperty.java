@@ -246,11 +246,6 @@ public class PromotionJobProperty extends JobProperty<LiterateBranchProject> imp
             return null;
         }
         if (allProcesses == null) {
-            for (PromotionConfiguration process : getProcesses()) {
-                if (StringUtils.equals(process.getName(), name)) {
-                    // TODO: create the PromotionProject instance
-                }
-            }
             return null;
         }
         for (PromotionProject process : allProcesses) {
