@@ -5,6 +5,7 @@ import edu.umd.cs.findbugs.annotations.NonNull;
 import hudson.EnvVars;
 import hudson.Extension;
 import hudson.model.AbstractBuild;
+import hudson.model.ChoiceParameterDefinition;
 import hudson.model.Hudson;
 import hudson.model.InvisibleAction;
 import hudson.model.ParameterDefinition;
@@ -99,7 +100,11 @@ public class ManualCondition extends PromotionCondition {
         }
         for (String name: missing) {
             Parameter p  = parameters.get(name);
-            result.add(new StringParameterDefinition(p.getName(), p.getDefaultValue(), p.getDescription()));
+            if (p.getValidValues() == null) {
+                result.add(new StringParameterDefinition(p.getName(), p.getDefaultValue(), p.getDescription()));
+            } else {
+                result.add(new ChoiceParameterDefinition(p.getName(), p.getValidValues().toArray(new String[p.getValidValues().size()]), p.getDescription()));
+            }
         }
         return result;
     }
