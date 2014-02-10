@@ -26,8 +26,14 @@ package org.cloudbees.literate.jenkins.promotions;
 import hudson.EnvVars;
 import hudson.console.HyperlinkNote;
 import hudson.model.AbstractBuild;
+import hudson.model.AbstractProject;
+import hudson.model.Action;
 import hudson.model.BuildListener;
+import hudson.model.Cause;
 import hudson.model.Node;
+import hudson.model.ParameterDefinition;
+import hudson.model.ParameterValue;
+import hudson.model.ParametersAction;
 import hudson.model.Result;
 import hudson.model.TaskListener;
 import hudson.model.TopLevelItem;
@@ -42,11 +48,14 @@ import org.cloudbees.literate.api.v1.TaskCommands;
 import org.cloudbees.literate.jenkins.LiterateBranchBuild;
 import org.cloudbees.literate.jenkins.LiterateBuilder;
 import org.cloudbees.literate.jenkins.ProjectModelAction;
+import org.cloudbees.literate.jenkins.promotions.conditions.ManualCondition;
 import org.kohsuke.stapler.export.Exported;
 
 import java.io.File;
 import java.io.IOException;
+import java.util.ArrayList;
 import java.util.Calendar;
+import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 
@@ -132,6 +141,57 @@ public class PromotionBuild extends AbstractBuild<PromotionProject, PromotionBui
         getStatus().buildEnvVars(this, e);
 
         return e;
+    }
+
+    /**
+     *
+     * @return user's name who triggered the promotion, or 'anonymous'
+     */
+    public String getUserName(){
+    	Cause.UserCause userClause=getCause(Cause.UserCause.class);
+    	if (userClause!=null && userClause.getUserName()!=null){
+    		return userClause.getUserName();
+    	}
+    	return "anonymous";
+    }
+
+    public List<ParameterValue> getParameterValues(){
+      List<ParameterValue> values=new ArrayList<ParameterValue>();
+      ParametersAction parametersAction=getParametersActions(this);
+      if (parametersAction!=null){
+        ManualCondition manualCondition=(ManualCondition) getProject().getPromotionCondition(ManualCondition.class.getName());
+        if (manualCondition!=null){
+            List<ParameterDefinition> parameterDefinitions =
+                    manualCondition.getParameterDefinitions(getProject(), getTarget());
+            for (ParameterValue pvalue:parametersAction.getParameters()){
+            if (ManualCondition.getParameterDefinition(parameterDefinitions, pvalue.getName())!=null){
+              values.add(pvalue);
+            }
+          }
+        }
+        return values;
+      }
+
+      //fallback to badge lookup for compatibility
+      for (PromotionBadge badget:getStatus().getBadges()){
+        if (badget instanceof ManualCondition.Badge){
+          return ((ManualCondition.Badge) badget).getParameterValues();
+        }
+      }
+      return Collections.emptyList();
+    }
+
+    public List<ParameterDefinition> getParameterDefinitionsWithValue() {
+        List<ParameterDefinition> definitions = new ArrayList<ParameterDefinition>();
+        ManualCondition manualCondition =
+                (ManualCondition) getProject().getPromotionCondition(ManualCondition.class.getName());
+        List<ParameterDefinition> parameterDefinitions =
+                manualCondition.getParameterDefinitions(getProject(), getTarget());
+        for (ParameterValue pvalue : getParameterValues()) {
+            ParameterDefinition pdef = ManualCondition.getParameterDefinition(parameterDefinitions, pvalue.getName());
+            definitions.add(pdef.copyWithDefaultValue(pvalue));
+        }
+        return definitions;
     }
 
     public void run() {
@@ -228,7 +288,19 @@ public class PromotionBuild extends AbstractBuild<PromotionProject, PromotionBui
             getTarget().save();
 
             if (getResult() == Result.SUCCESS) {
-                // TODO should evaluate any other pending promotions in case they had a condition on this promotion
+                // we should evaluate any other pending promotions in case
+                // they had a condition on this promotion
+                PromotionBranchBuildAction pba = getTarget().getAction(PromotionBranchBuildAction.class);
+                for (PromotionProject pp : pba.getPendingPromotions()) {
+                    pp.considerPromotion(getTarget());
+                }
+
+//                // tickle PromotionTriggers
+//                for (AbstractProject<?,?> p : Jenkins.getInstance().getAllItems(AbstractProject.class)) {
+//                    PromotionTrigger pt = p.getTrigger(PromotionTrigger.class);
+//                    if (pt!=null)
+//                        pt.consider(Promotion.this);
+//                }
             }
         }
 
@@ -244,4 +316,41 @@ public class PromotionBuild extends AbstractBuild<PromotionProject, PromotionBui
 
     }
 
+    /**
+     * Factory method for creating {@link ParametersAction}
+     * @param parameters
+     * @return
+     */
+    public static ParametersAction createParametersAction(List<ParameterValue> parameters){
+    	return new ParametersAction(parameters);
+    }
+    public static ParametersAction getParametersActions(PromotionBuild build){
+    	return build.getAction(ParametersAction.class);
+    }
+
+    /**
+     * Combine the target build parameters with the promotion build parameters
+     * @param actions
+     * @param build
+     * @param promotionParams
+     */
+	public static void buildParametersAction(List<Action> actions, AbstractBuild<?, ?> build, List<ParameterValue> promotionParams) {
+		List<ParameterValue> params=new ArrayList<ParameterValue>();
+
+		//Add the target build parameters first, if the same parameter is not being provided bu the promotion build
+        List<ParametersAction> parameters = build.getActions(ParametersAction.class);
+        for(ParametersAction paramAction:parameters){
+        	for (ParameterValue pvalue:paramAction.getParameters()){
+        		if (!promotionParams.contains(pvalue)){
+        			params.add(pvalue);
+        		}
+        	}
+        }
+
+        //Add all the promotion build parameters
+        params.addAll(promotionParams);
+
+        // Create list of actions to pass to scheduled build
+        actions.add(new ParametersAction(params));
+	}
 }

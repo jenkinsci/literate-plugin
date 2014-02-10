@@ -27,11 +27,16 @@ import hudson.EnvVars;
 import hudson.Util;
 import hudson.model.AbstractBuild;
 import hudson.model.Cause;
+import hudson.model.ParameterDefinition;
+import hudson.model.ParameterValue;
 import hudson.model.Result;
 import hudson.util.Iterators;
 import jenkins.model.Jenkins;
+import net.sf.json.JSONArray;
+import net.sf.json.JSONObject;
 import org.cloudbees.literate.jenkins.LiterateBranchBuild;
 import org.cloudbees.literate.jenkins.LiterateBranchProject;
+import org.cloudbees.literate.jenkins.promotions.conditions.ManualCondition;
 import org.kohsuke.stapler.StaplerRequest;
 import org.kohsuke.stapler.StaplerResponse;
 import org.kohsuke.stapler.export.Exported;
@@ -321,14 +326,44 @@ public class PromotionStatus {
         if (!getTarget().hasPermission(PromotionBuild.PROMOTE)) {
             return;
         }
-        Future<PromotionBuild> f = getPromotionProcess().scheduleBuild2(getTarget(), new Cause.UserCause());
+        JSONObject formData = req.getSubmittedForm();
+
+        List<ParameterValue> paramValues = null;
+        if (formData != null) {
+            paramValues = new ArrayList<ParameterValue>();
+            ManualCondition manualCondition = (ManualCondition) getPromotionProcess().getPromotionCondition(
+                    ManualCondition.class.getName());
+            if (manualCondition != null) {
+                List<ParameterDefinition> parameterDefinitions =
+                        manualCondition.getParameterDefinitions(getPromotionProcess(), getTarget());
+                if (!parameterDefinitions.isEmpty()) {
+                    JSONArray a = JSONArray.fromObject(formData.get("parameter"));
+
+                    for (Object o : a) {
+                        JSONObject jo = (JSONObject) o;
+                        String name = jo.getString("name");
+
+                        ParameterDefinition d = ManualCondition.getParameterDefinition(parameterDefinitions, name);
+                        if (d == null) {
+                            throw new IllegalArgumentException("No such parameter definition: " + name);
+                        }
+
+                        paramValues.add(d.createValue(req, jo));
+                    }
+                }
+            }
+        }
+        if (paramValues == null) {
+            paramValues = new ArrayList<ParameterValue>();
+        }
+        Future<PromotionBuild> f =
+                getPromotionProcess().scheduleBuild2(getTarget(), new Cause.UserCause(), paramValues);
         if (f == null) {
             LOGGER.warning("Failing to schedule the promotion of " + getTarget());
         }
         // TODO: we need better visual feed back so that the user knows that the build happened.
         rsp.forwardToPreviousPage(req);
     }
-
 
     public static class ComparatorImpl implements Comparator<PromotionStatus> {
         Iterable<PromotionConfiguration> processes;
@@ -338,7 +373,8 @@ public class PromotionStatus {
         }
 
         public int compare(PromotionStatus o1, PromotionStatus o2) {
-            return PromotionConfiguration.compare(o1.getPromotionProcess().getConfiguration(), o2.getPromotionProcess().getConfiguration());
+            return PromotionConfiguration
+                    .compare(o1.getPromotionProcess().getConfiguration(), o2.getPromotionProcess().getConfiguration());
         }
     }
 }

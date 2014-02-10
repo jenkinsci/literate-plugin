@@ -29,7 +29,10 @@ import hudson.Extension;
 import hudson.model.AbstractDescribableImpl;
 import hudson.model.Descriptor;
 import hudson.model.ModelObject;
+import hudson.util.DescribableList;
 import org.apache.commons.lang.StringUtils;
+import org.cloudbees.literate.jenkins.promotions.conditions.ManualCondition;
+import org.cloudbees.literate.jenkins.promotions.setup.RestoreArchivedFiles;
 import org.kohsuke.stapler.DataBoundConstructor;
 
 import java.io.Serializable;
@@ -54,13 +57,16 @@ public class PromotionConfiguration extends AbstractDescribableImpl<PromotionCon
     private final String environment;
     @CheckForNull
     private final PromotionSetup[] setupSteps;
+    @CheckForNull
+    private final PromotionCondition[] conditions;
 
     @DataBoundConstructor
-    public PromotionConfiguration(String name, String displayName, String environment, PromotionSetup[] setupSteps) {
+    public PromotionConfiguration(String name, String displayName, String environment, PromotionSetup[] setupSteps, PromotionCondition[] conditions) {
         this.name = name;
         this.displayName = displayName;
         this.environment = normalizeEnvironment(environment);
-        this.setupSteps = setupSteps;
+        this.setupSteps = setupSteps == null ? null : setupSteps.clone();
+        this.conditions = conditions == null ? null : conditions.clone();
     }
 
     public static String normalizeEnvironment(String environment) {
@@ -248,12 +254,27 @@ public class PromotionConfiguration extends AbstractDescribableImpl<PromotionCon
         return setupSteps == null ? Collections.<PromotionSetup>emptyList() : Arrays.asList(setupSteps);
     }
 
+    public List<PromotionCondition> getConditions() {
+        return conditions == null ? Collections.<PromotionCondition>emptyList() : Arrays.asList(conditions);
+    }
+
     @Extension
     public static class DescriptorImpl extends Descriptor<PromotionConfiguration> {
 
         @Override
         public String getDisplayName() {
             return "Promotion process";
+        }
+
+        public PromotionConfiguration defaultIfNull(PromotionConfiguration c) {
+            if (c == null) {
+                return new PromotionConfiguration(null, null, null, new PromotionSetup[]{
+                        new RestoreArchivedFiles(null, null, null)
+                }, new PromotionCondition[]{
+                        new ManualCondition(null, null)
+                });
+            }
+            return c;
         }
     }
 }

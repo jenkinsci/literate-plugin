@@ -41,6 +41,7 @@ import hudson.model.ItemGroup;
 import hudson.model.JDK;
 import hudson.model.Job;
 import hudson.model.Label;
+import hudson.model.ParameterValue;
 import hudson.model.ParametersAction;
 import hudson.model.PermalinkProjectAction;
 import hudson.model.Queue;
@@ -61,7 +62,7 @@ import org.apache.commons.lang.StringUtils;
 import org.cloudbees.literate.jenkins.BuildEnvironment;
 import org.cloudbees.literate.jenkins.LiterateBranchBuild;
 import org.cloudbees.literate.jenkins.LiterateBranchProject;
-import org.cloudbees.literate.jenkins.ParentLiterateBranchBuildAction;
+import org.cloudbees.literate.jenkins.promotions.conditions.ManualCondition;
 
 import java.io.File;
 import java.io.IOException;
@@ -69,9 +70,7 @@ import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.Collections;
 import java.util.Comparator;
-import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 import java.util.concurrent.Future;
@@ -161,6 +160,19 @@ public class PromotionProject
      */
     public LiterateBranchProject getOwner() {
         return getParent().getOwner();
+    }
+
+    /**
+     * Get the promotion condition by referencing it fully qualified class name
+     */
+    public PromotionCondition getPromotionCondition(String promotionClassName) {
+        for (PromotionCondition condition : getConfiguration().getConditions()) {
+            if (condition.getClass().getName().equals(promotionClassName)) {
+                return condition;
+            }
+        }
+
+        return null;
     }
 
     @Override
@@ -285,8 +297,78 @@ public class PromotionProject
         return baseName;
     }
 
-    public void promote(LiterateBranchBuild build, Cause cause, PromotionBadge... badges) throws IOException {
-        promote2(build,cause,new PromotionStatus(this,Arrays.asList(badges)));
+    /**
+     * Get the badges of conditions that were passed for this promotion for the build
+     */
+    public List<PromotionBadge> getMetQualifications(LiterateBranchBuild build) {
+        List<PromotionBadge> badges = new ArrayList<PromotionBadge>();
+        for (PromotionCondition cond : getConfiguration().getConditions()) {
+            PromotionBadge b = cond.isMet(this, build);
+
+            if (b != null)
+                badges.add(b);
+        }
+        return badges;
+    }
+
+    /**
+     * Get the conditions that have not been met for this promotion for the build
+     */
+    public List<PromotionCondition> getUnmetConditions(LiterateBranchBuild build) {
+        List<PromotionCondition> unmetConditions = new ArrayList<PromotionCondition>();
+
+        for (PromotionCondition cond : getConfiguration().getConditions()) {
+            if (cond.isMet(this, build) == null)
+                unmetConditions.add(cond);
+        }
+
+        return unmetConditions;
+    }
+
+    /**
+     * Checks if all the conditions to promote a build is met.
+     *
+     * @return
+     *      null if promotion conditions are not met.
+     *      otherwise returns a list of badges that record how the promotion happened.
+     */
+    public PromotionStatus isMet(LiterateBranchBuild build) {
+        List<PromotionBadge> badges = new ArrayList<PromotionBadge>();
+        for (PromotionCondition cond : getConfiguration().getConditions()) {
+            PromotionBadge b = cond.isMet(this, build);
+            if(b==null)
+                return null;
+            badges.add(b);
+        }
+        return new PromotionStatus(this,badges);
+    }
+
+    /**
+     * Checks if the build is promotable, and if so, promote it.
+     *
+     * @return
+     *      null if the build was not promoted, otherwise Future that kicks in when the build is completed.
+     */
+    public Future<PromotionBuild> considerPromotion(LiterateBranchBuild build) throws IOException {
+        if (!isActive())
+            return null;    // not active
+
+        PromotionBranchBuildAction  a = build.getAction(PromotionBranchBuildAction.class);
+
+        // if it's already promoted, no need to do anything.
+        if(a!=null && a.contains(this))
+            return null;
+
+        LOGGER.fine("Considering the promotion of "+build+" via "+getName());
+        PromotionStatus qualification = isMet(build);
+        if(qualification==null)
+            return null; // not this time
+
+        LOGGER.fine("Promotion condition of "+build+" is met: "+qualification);
+        Future<PromotionBuild> f = promote(build, new Cause.UserCause(), qualification); // TODO: define promotion cause
+        if (f==null)
+            LOGGER.warning(build+" qualifies for a promotion but the queueing failed.");
+        return f;
     }
 
     /**
@@ -297,7 +379,7 @@ public class PromotionProject
      * @return
      *      Future to track the completion of the promotion.
      */
-    public Future<PromotionBuild> promote2(LiterateBranchBuild build, Cause cause, PromotionStatus qualification) throws IOException {
+    public Future<PromotionBuild> promote(LiterateBranchBuild build, Cause cause, PromotionStatus qualification) throws IOException {
         PromotionBranchBuildAction  a = build.getAction(PromotionBranchBuildAction.class);
         // build is qualified for a promotion.
         if(a!=null) {
@@ -329,20 +411,30 @@ public class PromotionProject
         return scheduleBuild2(build, cause) != null;
     }
 
-    public Future<PromotionBuild> scheduleBuild2(LiterateBranchBuild build, Cause cause) {
+    public Future<PromotionBuild> scheduleBuild2(LiterateBranchBuild build, Cause cause, List<ParameterValue> params) {
         assert build.getProject() == getOwner();
 
         // Get the parameters, if any, used in the target build and make these
         // available as part of the promotion steps
-        List<ParametersAction> parameters = build.getActions(ParametersAction.class);
-
-        // Create list of actions to pass to scheduled build
         List<Action> actions = new ArrayList<Action>();
-        actions.addAll(parameters);
+        PromotionBuild.buildParametersAction(actions, build, params);
         actions.add(new PromotionTargetAction(build));
 
         // remember what build we are promoting
         return super.scheduleBuild2(0, cause, actions.toArray(new Action[actions.size()]));
+    }
+
+    public Future<PromotionBuild> scheduleBuild2(LiterateBranchBuild build, Cause cause) {
+        List<ParameterValue> params=new ArrayList<ParameterValue>();
+        List<ManualCondition.ManualApproval> approvals = build.getActions(ManualCondition.ManualApproval.class);
+        if (approvals!=null){
+	        for(ManualCondition.ManualApproval approval : approvals) {
+	        	params.addAll(approval.badge.getParameterValues());
+	        }
+        }
+
+        // remember what build we are promoting
+        return scheduleBuild2(build, cause, params);
     }
 
     public boolean isInQueue(LiterateBranchBuild build) {
@@ -413,7 +505,7 @@ public class PromotionProject
 
         @Override
         public String getDisplayName() {
-            return "Promotion process";
+            return Messages.PromotionProject_displayName();
         }
     }
 

@@ -39,6 +39,7 @@ import org.kohsuke.stapler.interceptor.RequirePOST;
 
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 import java.util.logging.Logger;
@@ -259,7 +260,7 @@ public class PromotionBranchBuildAction implements BuildBadgeAction {
             throw new IllegalStateException("This project doesn't have the promotion criterion called " + name);
         }
 
-        p.promote(owner, new Cause.UserCause(), new ManualPromotionBadge());
+        p.promote(owner, new Cause.UserCause(), new PromotionStatus(p, Arrays.asList(new ManualPromotionBadge())));
 
         return HttpResponses.redirectToDot();
     }

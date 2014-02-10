@@ -23,6 +23,7 @@
  -->
 <?jelly escape-by-default='true'?>
 <j:jelly xmlns:j="jelly:core" xmlns:st="jelly:stapler" xmlns:d="jelly:define" xmlns:l="/lib/layout" xmlns:t="/lib/hudson" xmlns:f="/lib/form">
+  <j:set var="instance" value="${descriptor.defaultIfNull(instance)}"/>
   <f:entry title="${%Name}" field="name">
     <f:textbox/>
   </f:entry>
@@ -32,6 +33,9 @@
     </f:entry>
     <f:entry title="${%Environment}" field="environment">
       <f:expandableTextbox/>
+    </f:entry>
+    <f:entry title="${%Conditions}">
+      <f:repeatableHeteroProperty hasHeader="true" field="conditions" deleteCaption="${%Delete condition}" addCaption="${%Add condition}" oneEach="true" honorOrder="true"/>
     </f:entry>
     <f:entry title="${%Setup steps}">
       <f:repeatableHeteroProperty hasHeader="true" field="setupSteps" deleteCaption="${%Delete step}" addCaption="${%Add step}"/>

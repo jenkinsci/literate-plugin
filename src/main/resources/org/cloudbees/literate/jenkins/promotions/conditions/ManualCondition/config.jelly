@@ -1,0 +1,10 @@
+<!-- nothing to configure -->
+<j:jelly xmlns:j="jelly:core" xmlns:st="jelly:stapler" xmlns:d="jelly:define" xmlns:l="/lib/layout" xmlns:t="/lib/hudson" xmlns:f="/lib/form">
+  <f:entry title="Approvers">
+    <f:textbox name="promotion.manual.users" value="${instance.users}" />
+  </f:entry>
+  <f:entry title="${%Approval Parameters}">
+      <f:repeatableHeteroProperty field="parameterDefinitions" hasHeader="true"
+                                  addCaption="${%Add parameter}" deleteCaption="${%Delete parameter}"/>
+  </f:entry>
+</j:jelly>

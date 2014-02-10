@@ -1,0 +1,11 @@
+<j:jelly xmlns:j="jelly:core" xmlns:st="jelly:stapler" xmlns:d="jelly:define" xmlns:l="/lib/layout" xmlns:t="/lib/hudson" xmlns:f="/lib/form">
+  <f:entry title="${%Job Name}" field="jobName">
+    <f:textbox/>
+  </f:entry>
+  <f:entry title="${%Branch Name}" field="branchName">
+    <f:select/>
+  </f:entry>
+  <f:entry title="${%Promotion}" field="process">
+    <f:select/>
+  </f:entry>
+</j:jelly>
