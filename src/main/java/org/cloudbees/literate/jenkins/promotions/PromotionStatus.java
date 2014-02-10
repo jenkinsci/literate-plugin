@@ -373,8 +373,11 @@ public class PromotionStatus {
         }
 
         public int compare(PromotionStatus o1, PromotionStatus o2) {
-            return PromotionConfiguration
-                    .compare(o1.getPromotionProcess().getConfiguration(), o2.getPromotionProcess().getConfiguration());
+            return PromotionConfiguration.compare(
+                    o1.getPromotionProcess().getConfiguration(),
+                    o2.getPromotionProcess().getConfiguration(),
+                    processes
+            );
         }
     }
 }

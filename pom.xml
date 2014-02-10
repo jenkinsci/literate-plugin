@@ -107,7 +107,7 @@
     <dependency>
       <groupId>org.jenkins-ci.literate</groupId>
       <artifactId>literate-api</artifactId>
-      <version>0.6-SNAPSHOT</version>
+      <version>0.6</version>
     </dependency>
     <!-- plugin dependencies -->
     <dependency>
@@ -118,7 +118,7 @@
     <dependency>
       <groupId>org.jenkins-ci.plugins</groupId>
       <artifactId>branch-api</artifactId>
-      <version>0.2-beta-2-SNAPSHOT</version>
+      <version>0.2-beta-2</version>
     </dependency>
     <!-- jenkins dependencies -->
     <!-- test dependencies -->

@@ -23,6 +23,7 @@
  */
 package org.cloudbees.literate.jenkins.promotions;
 
+import edu.umd.cs.findbugs.annotations.*;
 import hudson.EnvVars;
 import hudson.console.HyperlinkNote;
 import hudson.model.AbstractBuild;
@@ -200,6 +201,8 @@ public class PromotionBuild extends AbstractBuild<PromotionProject, PromotionBui
     }
 
     @Override
+    @edu.umd.cs.findbugs.annotations.SuppressWarnings(value = "EQ_COMPARETO_USE_OBJECT_EQUALS",
+            justification = "Matching the behaviour of the promoted builds plugin")
     public int compareTo(PromotionBuild that) {
         return that.getId().compareTo(this.getId());
     }

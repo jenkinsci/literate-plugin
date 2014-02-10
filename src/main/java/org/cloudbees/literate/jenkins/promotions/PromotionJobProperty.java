@@ -108,6 +108,7 @@ public class PromotionJobProperty extends JobProperty<LiterateBranchProject> imp
     private synchronized void safeAddToProcessesList(PromotionProject p) {
         int index = 0;
         boolean found = false;
+        List<PromotionProject> allProcesses = this.allProcesses == null ? new ArrayList<PromotionProject>() : this.allProcesses;
         for (ListIterator<PromotionProject> i = allProcesses.listIterator(); i.hasNext(); ) {
             PromotionProject process = i.next();
             if (p.getName().equalsIgnoreCase(process.getName())) {
@@ -128,10 +129,11 @@ public class PromotionJobProperty extends JobProperty<LiterateBranchProject> imp
         if (!found) {
             allProcesses.add(p);
         }
+        this.allProcesses = allProcesses;
     }
 
     @Override
-    protected void setOwner(LiterateBranchProject owner) {
+    protected synchronized void setOwner(LiterateBranchProject owner) {
         super.setOwner(owner);
         if (owner == null) {
             allProcesses = null;
@@ -162,25 +164,27 @@ public class PromotionJobProperty extends JobProperty<LiterateBranchProject> imp
      * Builds {@link #activeProcesses}.
      */
     private void buildActiveProcess() throws IOException {
-        activeProcesses = new ArrayList<PromotionProject>();
+        List<PromotionProject> activeProcesses = new ArrayList<PromotionProject>();
         Set<String> existingProcesses = new HashSet<String>();
-        for (PromotionProject p : allProcesses) {
-            boolean active = isActiveProcessNameIgnoreCase(p.getName());
-            p.makeDisabled(!active);
-            if (active) {
-                activeProcesses.add(p);
-            }
+        if (allProcesses != null) {
+            for (PromotionProject p : allProcesses) {
+                boolean active = isActiveProcessNameIgnoreCase(p.getName());
+                p.makeDisabled(!active);
+                if (active) {
+                    activeProcesses.add(p);
+                }
 
-            // ensure that the name casing matches what's given in the activeProcessName
-            // this is because in case insensitive file system, we may end up resolving
-            // to a directory name that differs only in their case.
-            p.renameTo(getActiveProcessName(p.getName()));
-            existingProcesses.add(p.getName());
-            if (!p.getConfigFile().exists()) {
-                try {
-                    p.save();
-                } catch (IOException e) {
-                    LOGGER.log(Level.WARNING, "Failed to save promotion process " + p.getName(), e);
+                // ensure that the name casing matches what's given in the activeProcessName
+                // this is because in case insensitive file system, we may end up resolving
+                // to a directory name that differs only in their case.
+                p.renameTo(getActiveProcessName(p.getName()));
+                existingProcesses.add(p.getName());
+                if (!p.getConfigFile().exists()) {
+                    try {
+                        p.save();
+                    } catch (IOException e) {
+                        LOGGER.log(Level.WARNING, "Failed to save promotion process " + p.getName(), e);
+                    }
                 }
             }
         }
@@ -196,6 +200,7 @@ public class PromotionJobProperty extends JobProperty<LiterateBranchProject> imp
                 LOGGER.log(Level.WARNING, "Failed to save promotion process " + p.getName(), e);
             }
         }
+        this.activeProcesses = activeProcesses;
     }
 
     /**
@@ -237,11 +242,11 @@ public class PromotionJobProperty extends JobProperty<LiterateBranchProject> imp
         return activeProcesses;
     }
 
-    public LiterateBranchProject getOwner() {
+    public synchronized LiterateBranchProject getOwner() {
         return owner;
     }
 
-    public PromotionProject getItem(String name) {
+    public synchronized PromotionProject getItem(String name) {
         if (owner == null) {
             return null;
         }

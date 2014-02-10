@@ -268,7 +268,7 @@ public class PromotionConfiguration extends AbstractDescribableImpl<PromotionCon
 
         public PromotionConfiguration defaultIfNull(PromotionConfiguration c) {
             if (c == null) {
-                return new PromotionConfiguration(null, null, null, new PromotionSetup[]{
+                return new PromotionConfiguration("", null, null, new PromotionSetup[]{
                         new RestoreArchivedFiles(null, null, null)
                 }, new PromotionCondition[]{
                         new ManualCondition(null, null)

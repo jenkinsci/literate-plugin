@@ -5,10 +5,13 @@ import hudson.ExtensionPoint;
 import hudson.model.AbstractDescribableImpl;
 import org.cloudbees.literate.jenkins.LiterateBranchBuild;
 
+import java.io.Serializable;
+
 /**
  * @author Stephen Connolly
  */
-public class PromotionCondition extends AbstractDescribableImpl<PromotionCondition> implements ExtensionPoint {
+public class PromotionCondition extends AbstractDescribableImpl<PromotionCondition>
+        implements ExtensionPoint, Serializable {
 
     /**
      * Checks if the promotion criteria is met.
