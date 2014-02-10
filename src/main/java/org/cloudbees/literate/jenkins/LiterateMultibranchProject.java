@@ -28,6 +28,7 @@ import hudson.Extension;
 import hudson.init.InitMilestone;
 import hudson.init.Initializer;
 import hudson.model.Descriptor;
+import hudson.model.Hudson;
 import hudson.model.Item;
 import hudson.model.ItemGroup;
 import hudson.model.Items;
@@ -38,6 +39,7 @@ import hudson.scm.NullSCM;
 import hudson.scm.SCM;
 import hudson.scm.SCMDescriptor;
 import hudson.tasks.LogRotator;
+import hudson.util.EditDistance;
 import hudson.util.RunList;
 import jenkins.branch.Branch;
 import jenkins.branch.BranchProjectFactory;
@@ -240,6 +242,23 @@ public class LiterateMultibranchProject extends
     @Override
     public DescriptorImpl getDescriptor() {
         return (DescriptorImpl) super.getDescriptor();
+    }
+
+    /**
+     * Finds a {@link LiterateMultibranchProject} whose name (when referenced from the specified context) is closest
+     * to the given name.
+     *
+     * @since 0.2-beta-3
+     */
+    public static LiterateMultibranchProject findNearest(String name, ItemGroup context) {
+        List<LiterateMultibranchProject> projects = Jenkins.getInstance().getAllItems(LiterateMultibranchProject.class);
+        String[] names = new String[projects.size()];
+        for (int i = 0; i < projects.size(); i++) {
+            names[i] = projects.get(i).getRelativeNameFrom(context);
+        }
+
+        String nearest = EditDistance.findNearest(name, names);
+        return (LiterateMultibranchProject) Jenkins.getInstance().getItem(nearest, context);
     }
 
     /**
