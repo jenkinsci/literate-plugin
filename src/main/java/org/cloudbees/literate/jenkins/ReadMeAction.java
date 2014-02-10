@@ -141,7 +141,7 @@ public class ReadMeAction implements Action, Serializable {
             // since the generation is deterministic we don't care about races, the end result is equivalent.
             PegDownProcessor pegDownProcessor = new PegDownProcessor(
                     Extensions.AUTOLINKS + Extensions.FENCED_CODE_BLOCKS + Extensions.HARDWRAPS
-                            + Extensions.SUPPRESS_ALL_HTML
+                            + Extensions.SUPPRESS_ALL_HTML + Extensions.DEFINITIONS
             );
             html = pegDownProcessor.markdownToHtml(markdown);
         }
