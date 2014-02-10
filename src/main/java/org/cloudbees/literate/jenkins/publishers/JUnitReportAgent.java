@@ -49,14 +49,18 @@ public class JUnitReportAgent extends Agent<JUnitResultArchiver> {
         super(JUnitResultArchiver.class);
     }
 
-    /** {@inheritDoc} */
+    /**
+     * {@inheritDoc}
+     */
     @NonNull
     @Override
     public String getConfigurationFilename() {
         return "junit.lst";
     }
 
-    /** {@inheritDoc} */
+    /**
+     * {@inheritDoc}
+     */
     @Override
     public JUnitResultArchiver getPublisher(@NonNull BuildListener listener, @NonNull FilePath configurationFile)
             throws IOException {

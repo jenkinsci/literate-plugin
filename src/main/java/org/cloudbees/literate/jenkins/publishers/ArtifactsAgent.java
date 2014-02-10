@@ -45,14 +45,18 @@ public class ArtifactsAgent extends Agent<ArtifactArchiver> {
         super(ArtifactArchiver.class);
     }
 
-    /** {@inheritDoc} */
+    /**
+     * {@inheritDoc}
+     */
     @NonNull
     @Override
     public String getConfigurationFilename() {
         return "artifacts.lst";
     }
 
-    /** {@inheritDoc} */
+    /**
+     * {@inheritDoc}
+     */
     @Override
     public ArtifactArchiver getPublisher(@NonNull BuildListener listener, @NonNull FilePath configurationFile)
             throws IOException {

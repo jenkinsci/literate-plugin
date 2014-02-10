@@ -35,7 +35,6 @@ import hudson.model.Job;
 import hudson.model.JobProperty;
 import hudson.model.JobPropertyDescriptor;
 import net.jcip.annotations.Immutable;
-import org.apache.commons.lang.StringUtils;
 import org.cloudbees.literate.api.v1.ProjectModel;
 import org.cloudbees.literate.api.v1.TaskCommands;
 import org.cloudbees.literate.jenkins.LiterateBranchBuild;
@@ -108,7 +107,8 @@ public class PromotionJobProperty extends JobProperty<LiterateBranchProject> imp
     private synchronized void safeAddToProcessesList(PromotionProject p) {
         int index = 0;
         boolean found = false;
-        List<PromotionProject> allProcesses = this.allProcesses == null ? new ArrayList<PromotionProject>() : this.allProcesses;
+        List<PromotionProject> allProcesses =
+                this.allProcesses == null ? new ArrayList<PromotionProject>() : this.allProcesses;
         for (ListIterator<PromotionProject> i = allProcesses.listIterator(); i.hasNext(); ) {
             PromotionProject process = i.next();
             if (p.getName().equalsIgnoreCase(process.getName())) {
@@ -145,7 +145,7 @@ public class PromotionJobProperty extends JobProperty<LiterateBranchProject> imp
             allProcesses = new ArrayList<PromotionProject>(
                     ItemGroupMixIn.<String, PromotionProject>loadChildren(
                             this, getRootDir(), ItemGroupMixIn.KEYED_BY_NAME).values());
-            for (PromotionProject p: allProcesses) {
+            for (PromotionProject p : allProcesses) {
                 try {
                     p.onLoad(this, p.getName());
                 } catch (IOException e) {
@@ -188,8 +188,10 @@ public class PromotionJobProperty extends JobProperty<LiterateBranchProject> imp
                 }
             }
         }
-        for (PromotionConfiguration c: processes) {
-            if (existingProcesses.contains(c.getName()))  continue;
+        for (PromotionConfiguration c : processes) {
+            if (existingProcesses.contains(c.getName())) {
+                continue;
+            }
             PromotionProject p = new PromotionProject(this, c);
             safeAddToProcessesList(p);
             activeProcesses.add(p);
@@ -319,8 +321,10 @@ public class PromotionJobProperty extends JobProperty<LiterateBranchProject> imp
     }
 
     public PromotionConfiguration getProcess(String name) {
-        for (PromotionConfiguration c: getProcesses()) {
-            if (PromotionConfiguration.nameEquals(name, c.getName())) return c;
+        for (PromotionConfiguration c : getProcesses()) {
+            if (PromotionConfiguration.nameEquals(name, c.getName())) {
+                return c;
+            }
         }
         return null;
     }

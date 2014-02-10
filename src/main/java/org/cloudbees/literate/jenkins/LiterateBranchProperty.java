@@ -27,8 +27,8 @@ import edu.umd.cs.findbugs.annotations.CheckForNull;
 import edu.umd.cs.findbugs.annotations.NonNull;
 import hudson.model.AbstractBuild;
 import hudson.model.AbstractProject;
-import jenkins.branch.ProjectDecorator;
 import jenkins.branch.BranchProperty;
+import jenkins.branch.ProjectDecorator;
 import org.cloudbees.literate.api.v1.ExecutionEnvironment;
 import org.cloudbees.literate.api.v1.ProjectModelRequest;
 

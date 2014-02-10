@@ -37,15 +37,11 @@ import hudson.model.Node;
 import hudson.model.Result;
 import hudson.slaves.WorkspaceList;
 import hudson.tasks.Publisher;
-import hudson.tasks.Shell;
 import hudson.tools.ToolInstallation;
-import jenkins.branch.Branch;
 import jenkins.model.Jenkins;
 import org.apache.commons.lang.StringUtils;
 import org.cloudbees.literate.api.v1.ExecutionEnvironment;
 import org.cloudbees.literate.api.v1.ProjectModel;
-import org.cloudbees.literate.api.v1.ProjectModelRequest;
-import org.cloudbees.literate.api.v1.ProjectModelSource;
 import org.cloudbees.literate.jenkins.publishers.Agent;
 import org.cloudbees.literate.jenkins.publishers.DefaultXmlAgent;
 import org.kohsuke.stapler.Ancestor;
@@ -56,12 +52,10 @@ import java.io.File;
 import java.io.IOException;
 import java.io.StringWriter;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Calendar;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.SortedSet;
 
 import static hudson.model.Result.FAILURE;
 
@@ -303,7 +297,7 @@ public class LiterateEnvironmentBuild extends Build<LiterateEnvironmentProject, 
             }
             try {
                 return LiterateBuilder.perform(
-                        (AbstractBuild)getBuild(),
+                        (AbstractBuild) getBuild(),
                         launcher,
                         listener,
                         envVars,

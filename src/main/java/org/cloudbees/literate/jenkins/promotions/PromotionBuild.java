@@ -23,11 +23,9 @@
  */
 package org.cloudbees.literate.jenkins.promotions;
 
-import edu.umd.cs.findbugs.annotations.*;
 import hudson.EnvVars;
 import hudson.console.HyperlinkNote;
 import hudson.model.AbstractBuild;
-import hudson.model.AbstractProject;
 import hudson.model.Action;
 import hudson.model.BuildListener;
 import hudson.model.Cause;
@@ -42,7 +40,6 @@ import hudson.security.Permission;
 import hudson.security.PermissionGroup;
 import hudson.security.PermissionScope;
 import hudson.slaves.WorkspaceList;
-import hudson.tasks.BuildStep;
 import jenkins.model.Jenkins;
 import org.cloudbees.literate.api.v1.ProjectModel;
 import org.cloudbees.literate.api.v1.TaskCommands;
@@ -145,41 +142,41 @@ public class PromotionBuild extends AbstractBuild<PromotionProject, PromotionBui
     }
 
     /**
-     *
      * @return user's name who triggered the promotion, or 'anonymous'
      */
-    public String getUserName(){
-    	Cause.UserCause userClause=getCause(Cause.UserCause.class);
-    	if (userClause!=null && userClause.getUserName()!=null){
-    		return userClause.getUserName();
-    	}
-    	return "anonymous";
+    public String getUserName() {
+        Cause.UserCause userClause = getCause(Cause.UserCause.class);
+        if (userClause != null && userClause.getUserName() != null) {
+            return userClause.getUserName();
+        }
+        return "anonymous";
     }
 
-    public List<ParameterValue> getParameterValues(){
-      List<ParameterValue> values=new ArrayList<ParameterValue>();
-      ParametersAction parametersAction=getParametersActions(this);
-      if (parametersAction!=null){
-        ManualCondition manualCondition=(ManualCondition) getProject().getPromotionCondition(ManualCondition.class.getName());
-        if (manualCondition!=null){
-            List<ParameterDefinition> parameterDefinitions =
-                    manualCondition.getParameterDefinitions(getProject(), getTarget());
-            for (ParameterValue pvalue:parametersAction.getParameters()){
-            if (ManualCondition.getParameterDefinition(parameterDefinitions, pvalue.getName())!=null){
-              values.add(pvalue);
+    public List<ParameterValue> getParameterValues() {
+        List<ParameterValue> values = new ArrayList<ParameterValue>();
+        ParametersAction parametersAction = getParametersActions(this);
+        if (parametersAction != null) {
+            ManualCondition manualCondition =
+                    (ManualCondition) getProject().getPromotionCondition(ManualCondition.class.getName());
+            if (manualCondition != null) {
+                List<ParameterDefinition> parameterDefinitions =
+                        manualCondition.getParameterDefinitions(getProject(), getTarget());
+                for (ParameterValue pvalue : parametersAction.getParameters()) {
+                    if (ManualCondition.getParameterDefinition(parameterDefinitions, pvalue.getName()) != null) {
+                        values.add(pvalue);
+                    }
+                }
             }
-          }
+            return values;
         }
-        return values;
-      }
 
-      //fallback to badge lookup for compatibility
-      for (PromotionBadge badget:getStatus().getBadges()){
-        if (badget instanceof ManualCondition.Badge){
-          return ((ManualCondition.Badge) badget).getParameterValues();
+        //fallback to badge lookup for compatibility
+        for (PromotionBadge badget : getStatus().getBadges()) {
+            if (badget instanceof ManualCondition.Badge) {
+                return ((ManualCondition.Badge) badget).getParameterValues();
+            }
         }
-      }
-      return Collections.emptyList();
+        return Collections.emptyList();
     }
 
     public List<ParameterDefinition> getParameterDefinitionsWithValue() {
@@ -258,8 +255,9 @@ public class PromotionBuild extends AbstractBuild<PromotionProject, PromotionBui
 
             // start with SUCCESS, unless someone makes it a failure
             setResult(Result.SUCCESS);
-            if(!setup(listener))
+            if (!setup(listener)) {
                 return Result.FAILURE;
+            }
 
             try {
                 if (!LiterateBuilder.perform(PromotionBuild.this, launcher, listener, getEnvironment(listener),
@@ -308,7 +306,7 @@ public class PromotionBuild extends AbstractBuild<PromotionProject, PromotionBui
         }
 
         private boolean setup(BuildListener listener) throws InterruptedException {
-            for (PromotionSetup setup: PromotionBuild.this.getProject().getConfiguration().getSetupSteps()) {
+            for (PromotionSetup setup : PromotionBuild.this.getProject().getConfiguration().getSetupSteps()) {
                 if (!setup.setup(PromotionBuild.this, listener)) {
                     listener.getLogger().println("failed setup " + setup + " " + getResult());
                     return false;
@@ -321,33 +319,37 @@ public class PromotionBuild extends AbstractBuild<PromotionProject, PromotionBui
 
     /**
      * Factory method for creating {@link ParametersAction}
+     *
      * @param parameters
      * @return
      */
-    public static ParametersAction createParametersAction(List<ParameterValue> parameters){
-    	return new ParametersAction(parameters);
+    public static ParametersAction createParametersAction(List<ParameterValue> parameters) {
+        return new ParametersAction(parameters);
     }
-    public static ParametersAction getParametersActions(PromotionBuild build){
-    	return build.getAction(ParametersAction.class);
+
+    public static ParametersAction getParametersActions(PromotionBuild build) {
+        return build.getAction(ParametersAction.class);
     }
 
     /**
      * Combine the target build parameters with the promotion build parameters
+     *
      * @param actions
      * @param build
      * @param promotionParams
      */
-	public static void buildParametersAction(List<Action> actions, AbstractBuild<?, ?> build, List<ParameterValue> promotionParams) {
-		List<ParameterValue> params=new ArrayList<ParameterValue>();
+    public static void buildParametersAction(List<Action> actions, AbstractBuild<?, ?> build,
+                                             List<ParameterValue> promotionParams) {
+        List<ParameterValue> params = new ArrayList<ParameterValue>();
 
-		//Add the target build parameters first, if the same parameter is not being provided bu the promotion build
+        //Add the target build parameters first, if the same parameter is not being provided bu the promotion build
         List<ParametersAction> parameters = build.getActions(ParametersAction.class);
-        for(ParametersAction paramAction:parameters){
-        	for (ParameterValue pvalue:paramAction.getParameters()){
-        		if (!promotionParams.contains(pvalue)){
-        			params.add(pvalue);
-        		}
-        	}
+        for (ParametersAction paramAction : parameters) {
+            for (ParameterValue pvalue : paramAction.getParameters()) {
+                if (!promotionParams.contains(pvalue)) {
+                    params.add(pvalue);
+                }
+            }
         }
 
         //Add all the promotion build parameters
@@ -355,5 +357,5 @@ public class PromotionBuild extends AbstractBuild<PromotionProject, PromotionBui
 
         // Create list of actions to pass to scheduled build
         actions.add(new ParametersAction(params));
-	}
+    }
 }

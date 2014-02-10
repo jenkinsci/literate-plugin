@@ -29,7 +29,6 @@ import hudson.Extension;
 import hudson.model.AbstractDescribableImpl;
 import hudson.model.Descriptor;
 import hudson.model.ModelObject;
-import hudson.util.DescribableList;
 import org.apache.commons.lang.StringUtils;
 import org.cloudbees.literate.jenkins.promotions.conditions.ManualCondition;
 import org.cloudbees.literate.jenkins.promotions.setup.RestoreArchivedFiles;
@@ -61,7 +60,8 @@ public class PromotionConfiguration extends AbstractDescribableImpl<PromotionCon
     private final PromotionCondition[] conditions;
 
     @DataBoundConstructor
-    public PromotionConfiguration(String name, String displayName, String environment, PromotionSetup[] setupSteps, PromotionCondition[] conditions) {
+    public PromotionConfiguration(String name, String displayName, String environment, PromotionSetup[] setupSteps,
+                                  PromotionCondition[] conditions) {
         this.name = name;
         this.displayName = displayName;
         this.environment = normalizeEnvironment(environment);

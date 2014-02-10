@@ -65,7 +65,8 @@ public class RestoreArchivedFiles extends PromotionSetup {
         }
 
         LiterateBranchBuild baseBuild = promotionBuild.getTarget();
-        listener.getLogger().println(Messages.RestoreArchivedFiles_restoringArtifactsFrom(HyperlinkNote.encodeTo(baseBuild.getUrl(), baseBuild.getFullDisplayName())));
+        listener.getLogger().println(Messages.RestoreArchivedFiles_restoringArtifactsFrom(
+                HyperlinkNote.encodeTo(baseBuild.getUrl(), baseBuild.getFullDisplayName())));
         Set<String> environments = PromotionConfiguration.asEnvironments(this.environments);
         for (LiterateEnvironmentBuild envBuild : baseBuild.getItems()) {
             if (environments != null) {

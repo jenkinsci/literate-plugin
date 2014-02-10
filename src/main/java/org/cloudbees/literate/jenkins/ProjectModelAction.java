@@ -31,14 +31,15 @@ import java.io.Serializable;
 
 /**
  * Stores the {@link ProjectModel} used to build a project.
+ *
  * @author Stephen Connolly
  */
 public class ProjectModelAction implements Action, Serializable {
 
     /**
-      * Ensure consistent serialization.
-      */
-     private static final long serialVersionUID = 1L;
+     * Ensure consistent serialization.
+     */
+    private static final long serialVersionUID = 1L;
 
     /**
      * The project model.
@@ -48,6 +49,7 @@ public class ProjectModelAction implements Action, Serializable {
 
     /**
      * Constructor.
+     *
      * @param model the model.
      */
     public ProjectModelAction(@NonNull ProjectModel model) {
@@ -57,6 +59,7 @@ public class ProjectModelAction implements Action, Serializable {
 
     /**
      * Returns the model.
+     *
      * @return the model.
      */
     @NonNull

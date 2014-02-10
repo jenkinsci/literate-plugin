@@ -78,14 +78,18 @@ public class PromotionTargetAction extends InvisibleAction implements BuildBadge
 
     public LiterateBranchBuild resolveFromRequest() {
         StaplerRequest current = Stapler.getCurrentRequest();
-        if (current == null) return null;
+        if (current == null) {
+            return null;
+        }
         PromotionBuild promotionBuild = current.findAncestorObject(PromotionBuild.class);
-        if (promotionBuild == null) return null;
+        if (promotionBuild == null) {
+            return null;
+        }
         return resolve(promotionBuild);
     }
 
     public String getTargetDisplayName() {
-        return "#"+number;
+        return "#" + number;
     }
 
     public int getNumber() {

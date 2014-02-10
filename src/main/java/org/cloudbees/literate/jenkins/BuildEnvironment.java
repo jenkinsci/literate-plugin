@@ -25,22 +25,14 @@ package org.cloudbees.literate.jenkins;
 
 import edu.umd.cs.findbugs.annotations.NonNull;
 import edu.umd.cs.findbugs.annotations.Nullable;
-import hudson.model.Descriptor;
-import hudson.model.Label;
-import hudson.model.labels.LabelAtom;
-import hudson.tools.ToolDescriptor;
-import hudson.tools.ToolInstallation;
-import jenkins.model.Jenkins;
 import net.jcip.annotations.Immutable;
 import org.cloudbees.literate.api.v1.ExecutionEnvironment;
 
 import java.io.Serializable;
-import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.Iterator;
 import java.util.LinkedHashSet;
-import java.util.List;
 import java.util.Set;
 import java.util.SortedSet;
 import java.util.StringTokenizer;
