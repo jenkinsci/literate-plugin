@@ -278,28 +278,35 @@ public class LiterateBranchBuild extends Build<LiterateBranchProject, LiterateBr
             // TODO sequential support builder fast fail as project option distinct from fan-out
             List<LiterateEnvironmentProject> configurations = new ArrayList<LiterateEnvironmentProject>();
             final Run<LiterateBranchProject, LiterateBranchBuild> upstream = LiterateBranchBuild.this;
+            ParametersAction originalParametersAction = getAction(ParametersAction.class);
+            List<ParameterValue> parameters = new ArrayList<ParameterValue>(originalParametersAction == null
+                    ? Collections.<ParameterValue>emptyList()
+                    : originalParametersAction.getParameters()
+            );
+            for (Parameter p: model.getBuild().getParameters().values()) {
+                if (p.getDefaultValue() == null) continue;
+                boolean match = false;
+                for (ParameterValue v: parameters) {
+                    if (StringUtils.equals(p.getName(), v.getName())) {
+                        match = true;
+                        break;
+                    }
+                }
+                if (!match) {
+                    parameters.add(new StringParameterValue(p.getName(), p.getDefaultValue(), p.getDescription()));
+                }
+            }
+            ParametersAction parametersAction = parameters.isEmpty() ? null : new ParametersAction(parameters);
+            if (parametersAction != null) {
+                if (originalParametersAction == null) {
+                    getActions().remove(originalParametersAction);
+                }
+                addAction(parametersAction);
+            }
             for (BuildEnvironment environment : getBuildEnvironments()) {
                 LiterateEnvironmentProject c = project.getEnvironment(environment);
                 configurations.add(c);
-                ParametersAction action = getAction(ParametersAction.class);
-                List<ParameterValue> parameters = new ArrayList<ParameterValue>(action == null
-                        ? Collections.<ParameterValue>emptyList()
-                        : action.getParameters()
-                );
-                for (Parameter p: model.getBuild().getParameters().values()) {
-                    if (p.getDefaultValue() == null) continue;
-                    boolean match = false;
-                    for (ParameterValue v: parameters) {
-                        if (StringUtils.equals(p.getName(), v.getName())) {
-                            match = true;
-                            break;
-                        }
-                    }
-                    if (!match) {
-                        parameters.add(new StringParameterValue(p.getName(), p.getDefaultValue(), p.getDescription()));
-                    }
-                }
-                c.scheduleBuild(parameters.isEmpty() ? null : new ParametersAction(parameters), new Cause.UpstreamCause(upstream));
+                c.scheduleBuild(parametersAction, new Cause.UpstreamCause(upstream));
             }
             try {
                 Result r = Result.SUCCESS;
