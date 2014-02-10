@@ -236,7 +236,7 @@ public class PromotionBuild extends AbstractBuild<PromotionProject, PromotionBui
                 return Result.FAILURE;
             }
             ProjectModel model = modelAction.getModel();
-            TaskCommands task = model.getTask(getParent().getConfiguration().getName());
+            TaskCommands task = model.getTask(getParent().getConfiguration().getName().toLowerCase());
 
             if (task == null) {
                 listener.getLogger().println("Project model for " +

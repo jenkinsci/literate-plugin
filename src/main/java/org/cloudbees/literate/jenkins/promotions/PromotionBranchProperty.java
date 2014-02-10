@@ -66,7 +66,7 @@ public class PromotionBranchProperty extends LiterateBranchProperty {
     @Override
     public void projectModelRequest(ProjectModelRequest.Builder builder) {
         for (PromotionConfiguration p : configurations) {
-            builder.addTaskId(p.getName());
+            builder.addTaskId(p.getName().toLowerCase());
         }
     }
 

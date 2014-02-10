@@ -339,7 +339,7 @@ public class PromotionJobProperty extends JobProperty<LiterateBranchProject> imp
         if (model == null) {
             return null;
         }
-        return model.getTask(promotionProject.getName());
+        return model.getTask(promotionProject.getName().toLowerCase());
     }
 
     @Extension

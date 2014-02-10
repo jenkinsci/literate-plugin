@@ -98,7 +98,7 @@ public class ManualCondition extends PromotionCondition {
     public List<ParameterDefinition> getParameterDefinitions(PromotionProject project, LiterateBranchBuild build) {
         ProjectModelAction modelAction = build.getAction(ProjectModelAction.class);
         ProjectModel model = modelAction == null ? null : modelAction.getModel();
-        TaskCommands task = model == null ? null : model.getTask(project.getName());
+        TaskCommands task = model == null ? null : model.getTask(project.getName().toLowerCase());
         Map<String, Parameter> parameters = task == null ? null : task.getParameters();
         if (parameters == null || parameters.isEmpty()) {
             return getParameterDefinitions();
