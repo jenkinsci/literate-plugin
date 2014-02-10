@@ -82,7 +82,7 @@ public class RestoreArchivedFiles extends PromotionSetup {
                     continue;
                 }
             }
-            if (environments.contains(envBuild.getParent().getName())) {
+            if (environments == null || environments.contains(envBuild.getParent().getName())) {
                 listener.getLogger().println(Messages.RestoreArchivedFiles_copyingArtifactsFrom(
                         HyperlinkNote.encodeTo('/' + envBuild.getUrl(), envBuild.getFullDisplayName())));
             }
