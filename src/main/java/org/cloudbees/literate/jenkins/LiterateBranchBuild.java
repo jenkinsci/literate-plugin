@@ -34,16 +34,20 @@ import hudson.model.BuildListener;
 import hudson.model.Cause;
 import hudson.model.Executor;
 import hudson.model.Node;
+import hudson.model.ParameterValue;
 import hudson.model.ParametersAction;
 import hudson.model.Queue;
 import hudson.model.Result;
 import hudson.model.Run;
+import hudson.model.StringParameterValue;
 import hudson.slaves.WorkspaceList;
 import hudson.util.HttpResponses;
 import hudson.util.IOUtils;
 import jenkins.branch.BranchProperty;
 import jenkins.model.Jenkins;
+import org.apache.commons.lang.StringUtils;
 import org.cloudbees.literate.api.v1.ExecutionEnvironment;
+import org.cloudbees.literate.api.v1.Parameter;
 import org.cloudbees.literate.api.v1.ProjectModel;
 import org.cloudbees.literate.api.v1.ProjectModelRequest;
 import org.cloudbees.literate.api.v1.ProjectModelSource;
@@ -277,7 +281,25 @@ public class LiterateBranchBuild extends Build<LiterateBranchProject, LiterateBr
             for (BuildEnvironment environment : getBuildEnvironments()) {
                 LiterateEnvironmentProject c = project.getEnvironment(environment);
                 configurations.add(c);
-                c.scheduleBuild(getAction(ParametersAction.class), new Cause.UpstreamCause(upstream));
+                ParametersAction action = getAction(ParametersAction.class);
+                List<ParameterValue> parameters = new ArrayList<ParameterValue>(action == null
+                        ? Collections.<ParameterValue>emptyList()
+                        : action.getParameters()
+                );
+                for (Parameter p: model.getBuild().getParameters().values()) {
+                    if (p.getDefaultValue() == null) continue;
+                    boolean match = false;
+                    for (ParameterValue v: parameters) {
+                        if (StringUtils.equals(p.getName(), v.getName())) {
+                            match = true;
+                            break;
+                        }
+                    }
+                    if (!match) {
+                        parameters.add(new StringParameterValue(p.getName(), p.getDefaultValue(), p.getDescription()));
+                    }
+                }
+                c.scheduleBuild(parameters.isEmpty() ? null : new ParametersAction(parameters), new Cause.UpstreamCause(upstream));
             }
             try {
                 Result r = Result.SUCCESS;
