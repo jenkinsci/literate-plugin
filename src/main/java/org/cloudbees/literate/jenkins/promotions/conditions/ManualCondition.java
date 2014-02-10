@@ -64,6 +64,24 @@ public class ManualCondition extends PromotionCondition {
         this(null, null);
     }
 
+    /**
+     * Gets the {@link hudson.model.ParameterDefinition} of the given name, if any.
+     */
+    public static ParameterDefinition getParameterDefinition(List<ParameterDefinition> parameterDefinitions,
+                                                             String name) {
+        if (parameterDefinitions == null) {
+            return null;
+        }
+
+        for (ParameterDefinition pd : parameterDefinitions) {
+            if (pd.getName().equals(name)) {
+                return pd;
+            }
+        }
+
+        return null;
+    }
+
     @CheckForNull
     public String getUsers() {
         return users;
@@ -81,16 +99,19 @@ public class ManualCondition extends PromotionCondition {
         ProjectModelAction modelAction = build.getAction(ProjectModelAction.class);
         ProjectModel model = modelAction == null ? null : modelAction.getModel();
         TaskCommands task = model == null ? null : model.getTask(project.getName());
-        Map<String,Parameter> parameters = task == null ? null : task.getParameters();
-        if (parameters == null || parameters.isEmpty()) return getParameterDefinitions();
+        Map<String, Parameter> parameters = task == null ? null : task.getParameters();
+        if (parameters == null || parameters.isEmpty()) {
+            return getParameterDefinitions();
+        }
         List<ParameterDefinition> result = new ArrayList<ParameterDefinition>();
         Set<String> missing = new HashSet<String>(parameters.keySet());
-        for (ParameterDefinition d: getParameterDefinitions()) {
-            Parameter p  = parameters.get(d.getName());
+        for (ParameterDefinition d : getParameterDefinitions()) {
+            Parameter p = parameters.get(d.getName());
             if (p != null) {
                 missing.remove(d.getName());
                 if (p.getDefaultValue() != null && d.getDefaultParameterValue() == null) {
-                    result.add(d.copyWithDefaultValue(new StringParameterValue(d.getName(), p.getDefaultValue(), d.getDescription())));
+                    result.add(d.copyWithDefaultValue(
+                            new StringParameterValue(d.getName(), p.getDefaultValue(), d.getDescription())));
                 } else {
                     result.add(d);
                 }
@@ -98,12 +119,13 @@ public class ManualCondition extends PromotionCondition {
                 result.add(d);
             }
         }
-        for (String name: missing) {
-            Parameter p  = parameters.get(name);
+        for (String name : missing) {
+            Parameter p = parameters.get(name);
             if (p.getValidValues() == null) {
                 result.add(new StringParameterDefinition(p.getName(), p.getDefaultValue(), p.getDescription()));
             } else {
-                result.add(new ChoiceParameterDefinition(p.getName(), p.getValidValues().toArray(new String[p.getValidValues().size()]), p.getDescription()));
+                result.add(new ChoiceParameterDefinition(p.getName(),
+                        p.getValidValues().toArray(new String[p.getValidValues().size()]), p.getDescription()));
             }
         }
         return result;
@@ -114,23 +136,6 @@ public class ManualCondition extends PromotionCondition {
      */
     public ParameterDefinition getParameterDefinition(String name) {
         return getParameterDefinition(parameterDefinitions, name);
-    }
-
-    /**
-     * Gets the {@link hudson.model.ParameterDefinition} of the given name, if any.
-     */
-    public static ParameterDefinition getParameterDefinition(List<ParameterDefinition> parameterDefinitions, String name) {
-        if (parameterDefinitions == null) {
-            return null;
-        }
-
-        for (ParameterDefinition pd : parameterDefinitions) {
-            if (pd.getName().equals(name)) {
-                return pd;
-            }
-        }
-
-        return null;
     }
 
     public Set<String> getUsersAsSet() {
