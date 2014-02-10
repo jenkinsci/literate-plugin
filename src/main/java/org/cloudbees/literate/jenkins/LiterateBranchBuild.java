@@ -283,10 +283,13 @@ public class LiterateBranchBuild extends Build<LiterateBranchProject, LiterateBr
                     ? Collections.<ParameterValue>emptyList()
                     : originalParametersAction.getParameters()
             );
-            for (Parameter p: model.getBuild().getParameters().values()) {
-                if (p.getDefaultValue() == null) continue;
+            boolean modifiedParameters = false;
+            for (Parameter p : model.getBuild().getParameters().values()) {
+                if (p.getDefaultValue() == null) {
+                    continue;
+                }
                 boolean match = false;
-                for (ParameterValue v: parameters) {
+                for (ParameterValue v : parameters) {
                     if (StringUtils.equals(p.getName(), v.getName())) {
                         match = true;
                         break;
@@ -294,11 +297,12 @@ public class LiterateBranchBuild extends Build<LiterateBranchProject, LiterateBr
                 }
                 if (!match) {
                     parameters.add(new StringParameterValue(p.getName(), p.getDefaultValue(), p.getDescription()));
+                    modifiedParameters = true;
                 }
             }
             ParametersAction parametersAction = parameters.isEmpty() ? null : new ParametersAction(parameters);
-            if (parametersAction != null) {
-                if (originalParametersAction == null) {
+            if (modifiedParameters && parametersAction != null) {
+                if (originalParametersAction != null) {
                     getActions().remove(originalParametersAction);
                 }
                 addAction(parametersAction);
