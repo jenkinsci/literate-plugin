@@ -34,13 +34,13 @@
     <f:entry title="${%Environment}" field="environment">
       <f:expandableTextbox/>
     </f:entry>
-    <f:entry title="${%Conditions}">
-      <f:repeatableHeteroProperty hasHeader="true" field="conditions" deleteCaption="${%Delete condition}" addCaption="${%Add condition}" oneEach="true" honorOrder="true"/>
-    </f:entry>
-    <f:entry title="${%Setup steps}">
-      <f:repeatableHeteroProperty hasHeader="true" field="setupSteps" deleteCaption="${%Delete step}" addCaption="${%Add step}"/>
-    </f:entry>
   </f:advanced>
+  <f:entry title="${%Conditions}">
+    <f:repeatableHeteroProperty hasHeader="true" field="conditions" deleteCaption="${%Delete condition}" addCaption="${%Add condition}" oneEach="true" honorOrder="true"/>
+  </f:entry>
+  <f:entry title="${%Setup steps}">
+    <f:repeatableHeteroProperty hasHeader="true" field="setupSteps" deleteCaption="${%Delete step}" addCaption="${%Add step}"/>
+  </f:entry>
   <f:entry title="">
      <div align="right">
        <f:repeatableDeleteButton value="${%Delete promotion}" />
