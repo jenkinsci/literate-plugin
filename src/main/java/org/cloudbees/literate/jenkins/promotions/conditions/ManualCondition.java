@@ -121,11 +121,12 @@ public class ManualCondition extends PromotionCondition {
         }
         for (String name : missing) {
             Parameter p = parameters.get(name);
-            if (p.getValidValues() == null) {
+            List<String> values = p.getValidValues();
+            if (values == null) {
                 result.add(new StringParameterDefinition(p.getName(), p.getDefaultValue(), p.getDescription()));
             } else {
                 result.add(new ChoiceParameterDefinition(p.getName(),
-                        p.getValidValues().toArray(new String[p.getValidValues().size()]), p.getDescription()));
+                        values.toArray(new String[values.size()]), p.getDescription()));
             }
         }
         return result;
