@@ -15,7 +15,7 @@ In each case the content will be searched for specific sections.
 The first section that contains the word `build` (ignore case, and this default can be changed)
 will be considered the definition of the build steps.
  
-The first section that contains the word `environment` (ignore case, and this default can be 
+The first section that contains the word `environments` (ignore case, and this default can be 
 changed) will be considered the definition of the environments against which the build
 steps will be verified.
  
