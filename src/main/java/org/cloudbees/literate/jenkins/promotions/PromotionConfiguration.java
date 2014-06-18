@@ -225,7 +225,7 @@ public class PromotionConfiguration extends AbstractDescribableImpl<PromotionCon
             }
             i++;
         }
-        int rv = Integer.compare(i1, i2);
+        int rv = i1 - i2;
         return rv == 0 ? nameCompare(n1, n2) : rv;
     }
 
