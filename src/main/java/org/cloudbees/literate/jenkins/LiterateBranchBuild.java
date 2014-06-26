@@ -220,6 +220,7 @@ public class LiterateBranchBuild extends Build<LiterateBranchProject, LiterateBr
          * {@inheritDoc}
          */
         @Override
+        @edu.umd.cs.findbugs.annotations.SuppressWarnings(value="RCN", justification = "diagnostics")
         protected Result doRun(final BuildListener listener) throws Exception, RunnerAbortedException {
             FilePath ws = getWorkspace();
             assert ws != null : "we are in a build so must have a workspace";
