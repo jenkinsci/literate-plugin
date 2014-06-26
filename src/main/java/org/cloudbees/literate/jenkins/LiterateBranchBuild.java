@@ -234,6 +234,10 @@ public class LiterateBranchBuild extends Build<LiterateBranchProject, LiterateBr
             listener.getLogger().println("Parsing literate build description...");
             ProjectModelSource source = new ProjectModelSource(LiterateBranchProject.class.getClassLoader());
             ProjectModel model = source.submit(requestBuilder.build());
+            if (model == null) {
+                listener.fatalError("Could not parse literate build description");
+                return FAILURE;
+            }
             listener.getLogger().println("Literate build description:");
             listener.getLogger().println("Checking " + model.getEnvironments().size() + " execution environments");
             boolean issues = false;
