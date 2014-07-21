@@ -291,6 +291,7 @@ public class LiterateEnvironmentBuild extends Build<LiterateEnvironmentProject, 
             EnvVars envVars = getEnvironment(listener);
             BuildEnvironment buildEnvironment = getParent().getEnvironment();
             BuildEnvironmentMapper environmentMapper = getParent().getGrandparent().getEnvironmentMapper();
+            environmentMapper.buildEnvVars(buildEnvironment, envVars);
             for (ToolInstallation installation : environmentMapper.getToolInstallations(buildEnvironment)) {
                 installation = installation.translate(LiterateEnvironmentBuild.this, listener);
                 installation.buildEnvVars(envVars);

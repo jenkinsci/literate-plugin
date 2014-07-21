@@ -48,6 +48,7 @@ package org.cloudbees.literate.jenkins;
 
 import edu.umd.cs.findbugs.annotations.CheckForNull;
 import edu.umd.cs.findbugs.annotations.NonNull;
+import hudson.EnvVars;
 import hudson.Extension;
 import hudson.model.Descriptor;
 import hudson.model.Label;
@@ -66,6 +67,15 @@ import java.util.List;
  * @author Stephen Connolly
  */
 public class DefaultBuildEnvironmentMapper extends BuildEnvironmentMapper {
+
+    @Override
+    public void buildEnvVars(@NonNull BuildEnvironment environment, EnvVars envVars) {
+        for (String component : environment.getComponents()) {
+            if(component.contains("=")) {
+                envVars.addLine(component);
+            }
+        }
+    }
 
     /**
      * {@inheritDoc}
@@ -97,6 +107,7 @@ public class DefaultBuildEnvironmentMapper extends BuildEnvironmentMapper {
     public Label getLabel(@NonNull BuildEnvironment environment) {
         Label result = null;
         for (String component : environment.getComponents()) {
+            if(component.contains("=")) continue;
             boolean isToolInstallation = false;
             descriptors:
             for (Descriptor<ToolInstallation> d : Jenkins.getInstance().getDescriptorList(ToolInstallation.class)) {

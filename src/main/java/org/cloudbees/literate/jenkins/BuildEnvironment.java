@@ -211,7 +211,7 @@ public class BuildEnvironment implements Comparable<BuildEnvironment>, Serializa
     public static Set<BuildEnvironment> fromSets(Collection<ExecutionEnvironment> environments) {
         Set<BuildEnvironment> result = new LinkedHashSet<BuildEnvironment>();
         for (ExecutionEnvironment environment : environments) {
-            result.add(new BuildEnvironment(environment.getLabels()));
+            result.add(new BuildEnvironment(environment.getComponents()));
         }
         return result;
     }
