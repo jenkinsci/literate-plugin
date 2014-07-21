@@ -247,7 +247,7 @@ public class LiterateBranchBuild extends Build<LiterateBranchProject, LiterateBr
                     issues = true;
                 }
                 listener.getLogger()
-                        .println(" * " + e.getLabels() + (model.getBuildFor(e) == null ? " missing build" : " ok"));
+                        .println(" * " + e.getDescription() + (model.getBuildFor(e) == null ? " missing build" : " ok"));
             }
             if (issues) {
                 return FAILURE;
