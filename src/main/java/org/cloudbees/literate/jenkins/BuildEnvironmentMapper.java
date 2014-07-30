@@ -25,6 +25,7 @@ package org.cloudbees.literate.jenkins;
 
 import edu.umd.cs.findbugs.annotations.CheckForNull;
 import edu.umd.cs.findbugs.annotations.NonNull;
+import hudson.EnvVars;
 import hudson.model.AbstractDescribableImpl;
 import hudson.model.Label;
 import hudson.tools.ToolInstallation;
@@ -69,4 +70,9 @@ public abstract class BuildEnvironmentMapper extends AbstractDescribableImpl<Bui
     public BuildEnvironmentMapperDescriptor getDescriptor() {
         return (BuildEnvironmentMapperDescriptor) super.getDescriptor();
     }
+
+    /**
+     * Expose any environment variables that the build environment wants the build to see.
+     */
+    public abstract void buildEnvVars(@NonNull BuildEnvironment environment, @NonNull EnvVars envVars);
 }
