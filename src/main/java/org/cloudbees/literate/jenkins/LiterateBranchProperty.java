@@ -25,8 +25,8 @@ package org.cloudbees.literate.jenkins;
 
 import edu.umd.cs.findbugs.annotations.CheckForNull;
 import edu.umd.cs.findbugs.annotations.NonNull;
-import hudson.model.AbstractBuild;
-import hudson.model.AbstractProject;
+import hudson.model.Job;
+import hudson.model.Run;
 import jenkins.branch.BranchProperty;
 import jenkins.branch.ProjectDecorator;
 import org.cloudbees.literate.api.v1.ExecutionEnvironment;
@@ -67,7 +67,7 @@ public abstract class LiterateBranchProperty extends BranchProperty {
      */
     @SuppressWarnings("unchecked")
     @Override
-    public final <P extends AbstractProject<P, B>, B extends AbstractBuild<P, B>> ProjectDecorator<P, B> decorator(
+    public final <P extends Job<P, B>, B extends Run<P, B>> ProjectDecorator<P, B> decorator(
             Class<P> jobType) {
         if (LiterateBranchProject.class.isAssignableFrom(jobType)) {
             return (ProjectDecorator<P, B>) branchDecorator();
