@@ -25,7 +25,6 @@ package org.cloudbees.literate.jenkins;
 
 import hudson.FilePath;
 import hudson.remoting.VirtualChannel;
-import hudson.util.IOException2;
 import org.cloudbees.literate.api.v1.vfs.PathNotFoundException;
 import org.cloudbees.literate.api.v1.vfs.ProjectRepository;
 
@@ -34,6 +33,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.util.Set;
 import java.util.TreeSet;
+import jenkins.MasterToSlaveFileCallable;
 
 /**
  * A {@link ProjectRepository} that is accessed using Jenkins' remoting {@link FilePath} interface.
@@ -90,7 +90,11 @@ public class FilePathRepository implements ProjectRepository {
      * {@inheritDoc}
      */
     public InputStream get(String filePath) throws PathNotFoundException, IOException {
-        return resolve(filePath).read();
+        try {
+            return resolve(filePath).read();
+        } catch (InterruptedException x) {
+            throw new IOException(x);
+        }
     }
 
     /**
@@ -100,7 +104,7 @@ public class FilePathRepository implements ProjectRepository {
         try {
             return resolve(path).isDirectory();
         } catch (InterruptedException e) {
-            throw new IOException2(e);
+            throw new IOException(e);
         }
     }
 
@@ -111,7 +115,7 @@ public class FilePathRepository implements ProjectRepository {
         try {
             return resolve(path).act(new IsFile());
         } catch (InterruptedException e) {
-            throw new IOException2(e);
+            throw new IOException(e);
         }
 
     }
@@ -155,14 +159,14 @@ public class FilePathRepository implements ProjectRepository {
             }
             return result;
         } catch (InterruptedException e) {
-            throw new IOException2(e);
+            throw new IOException(e);
         }
     }
 
     /**
      * Remote closure to test if something is a file.
      */
-    private static class IsFile implements FilePath.FileCallable<Boolean> {
+    private static class IsFile extends MasterToSlaveFileCallable<Boolean> {
         /**
          * {@inheritDoc}
          */

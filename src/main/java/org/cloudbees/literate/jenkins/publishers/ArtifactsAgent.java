@@ -59,7 +59,7 @@ public class ArtifactsAgent extends Agent<ArtifactArchiver> {
      */
     @Override
     public ArtifactArchiver getPublisher(@NonNull BuildListener listener, @NonNull FilePath configurationFile)
-            throws IOException {
+            throws IOException, InterruptedException {
         StringBuilder globs = new StringBuilder();
         String config = configurationFile.readToString();
         boolean first = true;

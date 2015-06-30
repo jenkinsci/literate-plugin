@@ -329,8 +329,7 @@ public class LiterateEnvironmentBuild extends Build<LiterateEnvironmentProject, 
         @Override
         protected WorkspaceList.Lease decideWorkspace(Node n, WorkspaceList wsl)
                 throws InterruptedException, IOException {
-            // TODO: this cast is indicative of abstraction problem
-            LiterateEnvironmentProject project = (LiterateEnvironmentProject) getProject();
+            LiterateEnvironmentProject project = getProject();
             return wsl.allocate(n.getWorkspaceFor(project.getParent().getParent())
                     .child(project.getParent().getBranch().getName() + "-" + project.getEnvironment().getName()));
         }

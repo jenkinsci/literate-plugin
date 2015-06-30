@@ -29,7 +29,6 @@ import hudson.model.BuildListener;
 import hudson.model.Descriptor;
 import hudson.model.Items;
 import hudson.tasks.Publisher;
-import hudson.util.IOException2;
 import hudson.util.IOUtils;
 
 import java.io.ByteArrayInputStream;
@@ -74,7 +73,7 @@ public class DefaultXmlAgent<P extends Publisher> extends Agent<P> {
      * {@inheritDoc}
      */
     @Override
-    public P getPublisher(@NonNull BuildListener listener, @NonNull FilePath configurationFile) throws IOException {
+    public P getPublisher(@NonNull BuildListener listener, @NonNull FilePath configurationFile) throws IOException, InterruptedException {
         byte[] bytes = readToBytes(configurationFile);
         if (bytes.length == 0) {
             log(listener, "Disabled: configuration file is empty");
@@ -84,7 +83,7 @@ public class DefaultXmlAgent<P extends Publisher> extends Agent<P> {
         try {
             return getPublisherClass().cast(Items.XSTREAM.fromXML(in));
         } catch (Throwable e) {
-            throw new IOException2("Unable to read " + configurationFile, e);
+            throw new IOException("Unable to read " + configurationFile, e);
         } finally {
             IOUtils.closeQuietly(in);
         }
@@ -97,7 +96,7 @@ public class DefaultXmlAgent<P extends Publisher> extends Agent<P> {
      * @return the contents of the file.
      * @throws IOException if something goes wrong.
      */
-    private byte[] readToBytes(FilePath file) throws IOException {
+    private byte[] readToBytes(FilePath file) throws IOException, InterruptedException {
         byte[] bytes;
         InputStream is = file.read();
         try {
