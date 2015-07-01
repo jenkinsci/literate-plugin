@@ -38,7 +38,6 @@ import hudson.scm.NullSCM;
 import hudson.scm.SCM;
 import hudson.scm.SCMDescriptor;
 import hudson.tasks.LogRotator;
-import hudson.util.EditDistance;
 import hudson.util.RunList;
 import jenkins.branch.Branch;
 import jenkins.branch.BranchProjectFactory;
@@ -248,16 +247,11 @@ public class LiterateMultibranchProject extends
      * to the given name.
      *
      * @since 0.2-beta-3
+     * @deorecated rather use {@link Items#findNearest}
      */
-    public static LiterateMultibranchProject findNearest(String name, ItemGroup context) {
-        List<LiterateMultibranchProject> projects = Jenkins.getInstance().getAllItems(LiterateMultibranchProject.class);
-        String[] names = new String[projects.size()];
-        for (int i = 0; i < projects.size(); i++) {
-            names[i] = projects.get(i).getRelativeNameFrom(context);
-        }
-
-        String nearest = EditDistance.findNearest(name, names);
-        return (LiterateMultibranchProject) Jenkins.getInstance().getItem(nearest, context);
+    @Deprecated
+    public static LiterateMultibranchProject findNearest(String name, ItemGroup<?> context) {
+        return Items.findNearest(LiterateMultibranchProject.class, name, context);
     }
 
     /**
@@ -310,7 +304,7 @@ public class LiterateMultibranchProject extends
          */
         @SuppressWarnings("unused") // stapler
         public BranchProjectFactoryDescriptor getProjectFactoryDescriptor() {
-            return Jenkins.getInstance().getDescriptorByType(ProjectFactoryImpl.DescriptorImpl.class);
+            return Jenkins.getActiveInstance().getDescriptorByType(ProjectFactoryImpl.DescriptorImpl.class);
         }
 
         /**

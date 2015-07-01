@@ -131,9 +131,6 @@ public class PromotionProject
 
     @NonNull
     public PromotionConfiguration getConfiguration() {
-        if (getParent() == null) {
-            return configuration;
-        }
         PromotionConfiguration c = getParent().getProcess(configuration.getName());
         return c == null ? configuration : c;
     }
@@ -441,7 +438,11 @@ public class PromotionProject
     }
 
     public boolean isInQueue(LiterateBranchBuild build) {
-        for (Queue.Item item : Jenkins.getInstance().getQueue().getItems(this)) {
+        Jenkins j = Jenkins.getInstance();
+        if (j == null) {
+            return false;
+        }
+        for (Queue.Item item : j.getQueue().getItems(this)) {
             if (item.getAction(PromotionTargetAction.class).resolve(this) == build) {
                 return true;
             }
@@ -489,7 +490,7 @@ public class PromotionProject
     }
 
     public DescriptorImpl getDescriptor() {
-        return (DescriptorImpl) Jenkins.getInstance().getDescriptorOrDie(getClass());
+        return (DescriptorImpl) Jenkins.getActiveInstance().getDescriptorOrDie(getClass());
     }
 
     @Override

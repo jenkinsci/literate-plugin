@@ -238,7 +238,11 @@ public class LiterateEnvironmentProject extends Project<LiterateEnvironmentProje
      */
     @Override
     protected synchronized LiterateEnvironmentBuild newBuild() throws IOException {
-        List<Action> actions = Executor.currentExecutor().getCurrentWorkUnit().context.actions;
+        Executor exec = Executor.currentExecutor();
+        if (exec == null) {
+            throw new IOException("not on an executor thread");
+        }
+        List<Action> actions = exec.getCurrentWorkUnit().context.actions;
         LiterateBranchBuild lb = getParent().getLastBuild();
         for (Action a : actions) {
             if (a instanceof ParentLiterateBranchBuildAction) {
@@ -470,11 +474,12 @@ public class LiterateEnvironmentProject extends Project<LiterateEnvironmentProje
         return scheduleBuild(parameters, new Cause.LegacyCodeCause());
     }
 
-    /**
-     * @param parameters Can be null.
-     */
-    public boolean scheduleBuild(ParametersAction parameters, Cause c) {
-        return Jenkins.getInstance().getQueue()
+    public boolean scheduleBuild(@CheckForNull ParametersAction parameters, Cause c) {
+        Jenkins j = Jenkins.getInstance();
+        if (j == null) {
+            return false;
+        }
+        return j.getQueue()
                 .schedule(this, getQuietPeriod(), parameters, new CauseAction(c),
                         new ParentLiterateBranchBuildAction()) != null;
     }

@@ -50,12 +50,11 @@ import edu.umd.cs.findbugs.annotations.CheckForNull;
 import edu.umd.cs.findbugs.annotations.NonNull;
 import hudson.EnvVars;
 import hudson.Extension;
-import hudson.model.Descriptor;
+import hudson.ExtensionList;
 import hudson.model.Label;
 import hudson.model.labels.LabelAtom;
 import hudson.tools.ToolDescriptor;
 import hudson.tools.ToolInstallation;
-import jenkins.model.Jenkins;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -85,14 +84,11 @@ public class DefaultBuildEnvironmentMapper extends BuildEnvironmentMapper {
         List<ToolInstallation> result = new ArrayList<ToolInstallation>();
         for (String component : environment.getComponents()) {
             descriptors:
-            for (Descriptor<ToolInstallation> d : Jenkins.getInstance().getDescriptorList(ToolInstallation.class)) {
-                if (d instanceof ToolDescriptor) {
-                    final ToolDescriptor descriptor = (ToolDescriptor) d;
-                    for (ToolInstallation t : descriptor.getInstallations()) {
-                        if (component.equalsIgnoreCase(t.getName())) {
-                            result.add(t);
-                            break descriptors;
-                        }
+            for (ToolDescriptor descriptor : ExtensionList.lookup(ToolDescriptor.class)) {
+                for (ToolInstallation t : descriptor.getInstallations()) {
+                    if (component.equalsIgnoreCase(t.getName())) {
+                        result.add(t);
+                        break descriptors;
                     }
                 }
             }
@@ -110,14 +106,11 @@ public class DefaultBuildEnvironmentMapper extends BuildEnvironmentMapper {
             if(component.contains("=")) continue;
             boolean isToolInstallation = false;
             descriptors:
-            for (Descriptor<ToolInstallation> d : Jenkins.getInstance().getDescriptorList(ToolInstallation.class)) {
-                if (d instanceof ToolDescriptor) {
-                    final ToolDescriptor descriptor = (ToolDescriptor) d;
-                    for (ToolInstallation t : descriptor.getInstallations()) {
-                        if (component.equalsIgnoreCase(t.getName())) {
-                            isToolInstallation = true;
-                            break descriptors;
-                        }
+            for (ToolDescriptor descriptor : ExtensionList.lookup(ToolDescriptor.class)) {
+                for (ToolInstallation t : descriptor.getInstallations()) {
+                    if (component.equalsIgnoreCase(t.getName())) {
+                        isToolInstallation = true;
+                        break descriptors;
                     }
                 }
             }

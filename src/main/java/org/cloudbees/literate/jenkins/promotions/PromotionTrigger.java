@@ -4,6 +4,7 @@ import hudson.Extension;
 import hudson.model.AbstractProject;
 import hudson.model.AutoCompletionCandidates;
 import hudson.model.Item;
+import hudson.model.Items;
 import hudson.triggers.Trigger;
 import hudson.triggers.TriggerDescriptor;
 import hudson.util.FormValidation;
@@ -80,11 +81,11 @@ public class PromotionTrigger extends Trigger<AbstractProject> {
 
             if (StringUtils.isNotBlank(value)) {
                 LiterateMultibranchProject p =
-                        Jenkins.getInstance().getItem(value, project, LiterateMultibranchProject.class);
+                        Jenkins.getActiveInstance().getItem(value, project, LiterateMultibranchProject.class);
                 if (p == null) {
-                    return FormValidation.error(hudson.tasks.Messages.BuildTrigger_NoSuchProject(value,
-                            LiterateMultibranchProject.findNearest(value, project.getParent())
-                                    .getRelativeNameFrom(project)));
+                    LiterateMultibranchProject nearest = Items.findNearest(LiterateMultibranchProject.class, value, project.getParent());
+                    String relativeName = nearest != null ? nearest.getRelativeNameFrom(project) : "?";
+                    return FormValidation.error(hudson.tasks.Messages.BuildTrigger_NoSuchProject(value, relativeName));
                 }
 
             }
@@ -94,7 +95,7 @@ public class PromotionTrigger extends Trigger<AbstractProject> {
 
         public AutoCompletionCandidates doAutoCompleteJobName(@QueryParameter String value) {
             AutoCompletionCandidates candidates = new AutoCompletionCandidates();
-            List<AbstractProject> jobs = Jenkins.getInstance().getItems(AbstractProject.class);
+            List<AbstractProject> jobs = Jenkins.getActiveInstance().getItems(AbstractProject.class);
             for (AbstractProject job : jobs) {
                 if (job.getFullName().startsWith(value)) {
                     if (job.hasPermission(Item.READ)) {
@@ -114,7 +115,7 @@ public class PromotionTrigger extends Trigger<AbstractProject> {
 
             LiterateMultibranchProject j = null;
             if (jobName != null) {
-                j = Jenkins.getInstance().getItem(jobName, defaultJob, LiterateMultibranchProject.class);
+                j = Jenkins.getActiveInstance().getItem(jobName, defaultJob, LiterateMultibranchProject.class);
             }
 
             ListBoxModel r = new ListBoxModel();
@@ -136,7 +137,7 @@ public class PromotionTrigger extends Trigger<AbstractProject> {
 
             LiterateMultibranchProject j = null;
             if (jobName != null) {
-                j = Jenkins.getInstance().getItem(jobName, defaultJob, LiterateMultibranchProject.class);
+                j = Jenkins.getActiveInstance().getItem(jobName, defaultJob, LiterateMultibranchProject.class);
             }
             LiterateBranchProject jj = j == null ? null : j.getBranch(branchName);
 

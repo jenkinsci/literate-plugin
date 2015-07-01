@@ -186,7 +186,7 @@ public class LiterateBuilder extends Builder {
                         commandLine = args.toArray(new String[args.size()]);
                     } else {
                         Shell.DescriptorImpl shellDescriptor =
-                                Jenkins.getInstance().getDescriptorByType(Shell.DescriptorImpl.class);
+                                Jenkins.getActiveInstance().getDescriptorByType(Shell.DescriptorImpl.class);
                         commandLine =
                                 new String[]{
                                         shellDescriptor.getShellOrDefault(ws.getChannel()),

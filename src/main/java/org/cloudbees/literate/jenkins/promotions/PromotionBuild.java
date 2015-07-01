@@ -24,6 +24,7 @@
 package org.cloudbees.literate.jenkins.promotions;
 
 import hudson.EnvVars;
+import hudson.FilePath;
 import hudson.console.HyperlinkNote;
 import hudson.model.AbstractBuild;
 import hudson.model.Action;
@@ -120,7 +121,8 @@ public class PromotionBuild extends AbstractBuild<PromotionProject, PromotionBui
         EnvVars e = super.getEnvironment(listener);
 
         // Augment environment with target build's information
-        String rootUrl = Jenkins.getInstance().getRootUrl();
+        Jenkins j = Jenkins.getInstance();
+        String rootUrl = j != null ? j.getRootUrl() : null;
         AbstractBuild<?, ?> target = getTarget();
         if (rootUrl != null) {
             e.put("PROMOTED_URL", rootUrl + target.getUrl());
@@ -218,10 +220,17 @@ public class PromotionBuild extends AbstractBuild<PromotionProject, PromotionBui
             if (customWorkspace != null)
             // we allow custom workspaces to be concurrently used between jobs.
             {
-                return WorkspaceList.Lease.createDummyLease(
-                        n.getRootPath().child(getEnvironment(listener).expand(customWorkspace)));
+                FilePath root = n.getRootPath();
+                if (root == null) {
+                    throw new IOException("offline node " + n);
+                }
+                return WorkspaceList.Lease.createDummyLease(root.child(getEnvironment(listener).expand(customWorkspace)));
             }
-            return wsl.acquire(n.getWorkspaceFor((TopLevelItem) getTarget().getProject()), true);
+            FilePath workspace = n.getWorkspaceFor((TopLevelItem) getTarget().getProject());
+            if (workspace == null) {
+                throw new IOException("offline node " + n);
+            }
+            return wsl.acquire(workspace, true);
         }
 
         protected Result doRun(BuildListener listener) throws Exception {
