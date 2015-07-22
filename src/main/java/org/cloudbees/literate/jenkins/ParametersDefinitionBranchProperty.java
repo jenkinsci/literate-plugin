@@ -25,56 +25,22 @@ package org.cloudbees.literate.jenkins;
 
 import edu.umd.cs.findbugs.annotations.NonNull;
 import hudson.Extension;
-import hudson.model.JobProperty;
-import hudson.model.ParameterDefinition;
-import hudson.model.ParametersDefinitionProperty;
+import hudson.model.Job;
+import hudson.model.Run;
 import jenkins.branch.BranchPropertyDescriptor;
 import jenkins.branch.MultiBranchProjectDescriptor;
-import jenkins.branch.ProjectDecorator;
+import jenkins.branch.ParameterDefinitionBranchProperty;
 import org.kohsuke.stapler.DataBoundConstructor;
-import org.kohsuke.stapler.export.Exported;
-
-import java.util.Iterator;
-import java.util.List;
 
 /**
  * Support for build parameters.
  */
-public class ParametersDefinitionBranchProperty extends LiterateBranchProperty {
+public class ParametersDefinitionBranchProperty extends ParameterDefinitionBranchProperty {
 
-    private final List<ParameterDefinition> parameterDefinitions;
+    @DataBoundConstructor public ParametersDefinitionBranchProperty() {}
 
-    @DataBoundConstructor
-    public ParametersDefinitionBranchProperty(List<ParameterDefinition> parameterDefinitions) {
-        this.parameterDefinitions = parameterDefinitions;
-    }
-
-    @Exported
-    public List<ParameterDefinition> getParameterDefinitions() {
-        return parameterDefinitions;
-    }
-
-    @Override
-    public ProjectDecorator<LiterateBranchProject, LiterateBranchBuild> branchDecorator() {
-        return new ProjectDecorator<LiterateBranchProject, LiterateBranchBuild>() {
-            @NonNull
-            @Override
-            public List<JobProperty<? super LiterateBranchProject>> jobProperties(
-                    @NonNull List<JobProperty<? super LiterateBranchProject>> jobProperties) {
-                List<JobProperty<? super LiterateBranchProject>> result = asArrayList(jobProperties);
-                for (Iterator<JobProperty<? super LiterateBranchProject>> iterator = result.iterator();
-                     iterator.hasNext(); ) {
-                    JobProperty<? super LiterateBranchProject> p = iterator.next();
-                    if (p instanceof ParametersDefinitionProperty) {
-                        iterator.remove();
-                    }
-                }
-                if (parameterDefinitions != null && !parameterDefinitions.isEmpty()) {
-                    result.add(new ParametersDefinitionProperty(parameterDefinitions));
-                }
-                return result;
-            }
-        };
+    @Override protected <P extends Job<P, B>, B extends Run<P, B>> boolean isApplicable(Class<P> clazz) {
+        return LiterateBranchProject.class.isAssignableFrom(clazz);
     }
 
     @Extension
@@ -82,7 +48,7 @@ public class ParametersDefinitionBranchProperty extends LiterateBranchProperty {
 
         @Override
         protected boolean isApplicable(@NonNull MultiBranchProjectDescriptor projectDescriptor) {
-            return LiterateBranchProject.class.isAssignableFrom(projectDescriptor.getClazz());
+            return LiterateMultibranchProject.class.isAssignableFrom(projectDescriptor.getClazz());
         }
 
         @Override
