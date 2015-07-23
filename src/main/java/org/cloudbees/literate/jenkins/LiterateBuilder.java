@@ -185,8 +185,11 @@ public class LiterateBuilder extends Builder {
                         args.set(0, args.get(0).substring(2));   // trim off "#!"
                         commandLine = args.toArray(new String[args.size()]);
                     } else {
-                        Shell.DescriptorImpl shellDescriptor =
-                                Jenkins.getActiveInstance().getDescriptorByType(Shell.DescriptorImpl.class);
+                        Jenkins j = Jenkins.getInstance();
+                        if (j == null) {
+                            throw new IllegalStateException(); // TODO 1.590+ getActiveInstance
+                        }
+                        Shell.DescriptorImpl shellDescriptor = j.getDescriptorByType(Shell.DescriptorImpl.class);
                         commandLine =
                                 new String[]{
                                         shellDescriptor.getShellOrDefault(ws.getChannel()),

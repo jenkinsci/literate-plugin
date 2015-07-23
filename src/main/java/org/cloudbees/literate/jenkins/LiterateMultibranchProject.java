@@ -304,7 +304,11 @@ public class LiterateMultibranchProject extends
          */
         @SuppressWarnings("unused") // stapler
         public BranchProjectFactoryDescriptor getProjectFactoryDescriptor() {
-            return Jenkins.getActiveInstance().getDescriptorByType(ProjectFactoryImpl.DescriptorImpl.class);
+            Jenkins j = Jenkins.getInstance();
+            if (j == null) {
+                throw new IllegalStateException(); // TODO 1.590+ getActiveInstance
+            }
+            return j.getDescriptorByType(ProjectFactoryImpl.DescriptorImpl.class);
         }
 
         /**

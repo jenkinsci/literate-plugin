@@ -80,8 +80,11 @@ public class PromotionTrigger extends Trigger<AbstractProject> {
             project.checkPermission(Item.CONFIGURE);
 
             if (StringUtils.isNotBlank(value)) {
-                LiterateMultibranchProject p =
-                        Jenkins.getActiveInstance().getItem(value, project, LiterateMultibranchProject.class);
+                Jenkins j = Jenkins.getInstance();
+                if (j == null) {
+                    throw new IllegalStateException(); // TODO 1.590+ getActiveInstance
+                }
+                LiterateMultibranchProject p = j.getItem(value, project, LiterateMultibranchProject.class);
                 if (p == null) {
                     LiterateMultibranchProject nearest = Items.findNearest(LiterateMultibranchProject.class, value, project.getParent());
                     String relativeName = nearest != null ? nearest.getRelativeNameFrom(project) : "?";
@@ -95,7 +98,11 @@ public class PromotionTrigger extends Trigger<AbstractProject> {
 
         public AutoCompletionCandidates doAutoCompleteJobName(@QueryParameter String value) {
             AutoCompletionCandidates candidates = new AutoCompletionCandidates();
-            List<AbstractProject> jobs = Jenkins.getActiveInstance().getItems(AbstractProject.class);
+            Jenkins j = Jenkins.getInstance();
+            if (j == null) {
+                throw new IllegalStateException(); // TODO 1.590+ getActiveInstance
+            }
+            List<AbstractProject> jobs = j.getItems(AbstractProject.class);
             for (AbstractProject job : jobs) {
                 if (job.getFullName().startsWith(value)) {
                     if (job.hasPermission(Item.READ)) {
@@ -115,7 +122,11 @@ public class PromotionTrigger extends Trigger<AbstractProject> {
 
             LiterateMultibranchProject j = null;
             if (jobName != null) {
-                j = Jenkins.getActiveInstance().getItem(jobName, defaultJob, LiterateMultibranchProject.class);
+                Jenkins jenkins = Jenkins.getInstance();
+                if (jenkins == null) {
+                    throw new IllegalStateException(); // TODO 1.590+ getActiveInstance
+                }
+                j = jenkins.getItem(jobName, defaultJob, LiterateMultibranchProject.class);
             }
 
             ListBoxModel r = new ListBoxModel();
@@ -137,7 +148,11 @@ public class PromotionTrigger extends Trigger<AbstractProject> {
 
             LiterateMultibranchProject j = null;
             if (jobName != null) {
-                j = Jenkins.getActiveInstance().getItem(jobName, defaultJob, LiterateMultibranchProject.class);
+                Jenkins jenkins = Jenkins.getInstance();
+                if (jenkins == null) {
+                    throw new IllegalStateException(); // TODO 1.590+ getActiveInstance
+                }
+                j = jenkins.getItem(jobName, defaultJob, LiterateMultibranchProject.class);
             }
             LiterateBranchProject jj = j == null ? null : j.getBranch(branchName);
 

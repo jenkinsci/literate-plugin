@@ -490,7 +490,11 @@ public class PromotionProject
     }
 
     public DescriptorImpl getDescriptor() {
-        return (DescriptorImpl) Jenkins.getActiveInstance().getDescriptorOrDie(getClass());
+        Jenkins j = Jenkins.getInstance();
+        if (j == null) {
+            throw new IllegalStateException(); // TODO 1.590+ getActiveInstance
+        }
+        return (DescriptorImpl) j.getDescriptorOrDie(getClass());
     }
 
     @Override

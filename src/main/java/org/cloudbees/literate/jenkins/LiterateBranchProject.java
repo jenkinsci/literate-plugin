@@ -229,7 +229,11 @@ public class LiterateBranchProject extends Project<LiterateBranchProject, Litera
     @Override
     @NonNull
     public SCMCheckoutStrategy getScmCheckoutStrategy() {
-        return Jenkins.getActiveInstance().getDescriptorByType(SCMCheckoutStrategyImpl.DescriptorImpl.class).getInstance();
+        Jenkins j = Jenkins.getInstance();
+        if (j == null) {
+            throw new IllegalStateException(); // TODO 1.590+ getActiveInstance
+        }
+        return j.getDescriptorByType(SCMCheckoutStrategyImpl.DescriptorImpl.class).getInstance();
     }
 
     /**
@@ -641,7 +645,11 @@ public class LiterateBranchProject extends Project<LiterateBranchProject, Litera
      */
     // TODO - Hack - child items of an item group that is a view container must to implement TopLevelItem
     @Override public TopLevelItemDescriptor getDescriptor() {
-        return (TopLevelItemDescriptor) Jenkins.getActiveInstance().getDescriptorOrDie(LiterateBranchProject.class);
+        Jenkins j = Jenkins.getInstance();
+        if (j == null) {
+            throw new IllegalStateException(); // TODO 1.590+ getActiveInstance
+        }
+        return (TopLevelItemDescriptor) j.getDescriptorOrDie(LiterateBranchProject.class);
     }
 
     /**

@@ -134,7 +134,7 @@ public class MigrateFreeStyleAction implements Action {
      * @throws ServletException when things go wrong.
      */
     public void doExport(StaplerRequest req, StaplerResponse rsp) throws IOException, ServletException {
-        Jenkins.getActiveInstance().checkPermission(EXPORT_LITERATE);
+        Jenkins.getInstance().checkPermission(EXPORT_LITERATE);
 
         if (!"POST".equals(req.getMethod())) {
             rsp.sendRedirect2(".");

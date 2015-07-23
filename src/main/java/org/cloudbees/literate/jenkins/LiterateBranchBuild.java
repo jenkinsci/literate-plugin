@@ -44,7 +44,6 @@ import hudson.slaves.WorkspaceList;
 import hudson.util.HttpResponses;
 import hudson.util.IOUtils;
 import jenkins.branch.BranchProperty;
-import jenkins.model.Jenkins;
 import org.apache.commons.lang.StringUtils;
 import org.cloudbees.literate.api.v1.ExecutionEnvironment;
 import org.cloudbees.literate.api.v1.Parameter;
@@ -335,7 +334,7 @@ public class LiterateBranchBuild extends Build<LiterateBranchProject, LiterateBr
                 return r;
             } finally {
                 // if the build was aborted in the middle, cancel all the child builds
-                Queue q = Jenkins.getActiveInstance().getQueue();
+                Queue q = Queue.getInstance();
                 synchronized (q) {// avoid micro-locking on Queue#cancel
                     final int n = getNumber();
                     for (LiterateEnvironmentProject c : configurations) {
