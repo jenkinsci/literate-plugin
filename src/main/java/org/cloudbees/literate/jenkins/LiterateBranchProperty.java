@@ -27,12 +27,12 @@ import edu.umd.cs.findbugs.annotations.CheckForNull;
 import edu.umd.cs.findbugs.annotations.NonNull;
 import hudson.model.Job;
 import hudson.model.Run;
+import java.util.List;
 import jenkins.branch.BranchProperty;
+import jenkins.branch.JobDecorator;
 import jenkins.branch.ProjectDecorator;
 import org.cloudbees.literate.api.v1.ExecutionEnvironment;
 import org.cloudbees.literate.api.v1.ProjectModelRequest;
-
-import java.util.List;
 
 /**
  * A {@link BranchProperty} that is specifically for {@link LiterateMultibranchProject}s.
@@ -67,13 +67,13 @@ public abstract class LiterateBranchProperty extends BranchProperty {
      */
     @SuppressWarnings("unchecked")
     @Override
-    public final <P extends Job<P, B>, B extends Run<P, B>> ProjectDecorator<P, B> decorator(
+    public final <P extends Job<P, B>, B extends Run<P, B>> JobDecorator<P, B> jobDecorator(
             Class<P> jobType) {
         if (LiterateBranchProject.class.isAssignableFrom(jobType)) {
-            return (ProjectDecorator<P, B>) branchDecorator();
+            return (ProjectDecorator) branchDecorator();
         }
         if (LiterateEnvironmentProject.class.isAssignableFrom(jobType)) {
-            return (ProjectDecorator<P, B>) environmentDecorator();
+            return (ProjectDecorator) environmentDecorator();
         }
         return null;
     }
