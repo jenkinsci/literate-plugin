@@ -187,7 +187,7 @@ public class LiterateBuilder extends Builder {
                     } else {
                         Jenkins j = Jenkins.getInstance();
                         if (j == null) {
-                            throw new IllegalStateException(); // TODO 1.590+ getActiveInstance
+                            throw new IllegalStateException("Jenkins has not started, or is shutting down"); // TODO 1.590+ getActiveInstance
                         }
                         Shell.DescriptorImpl shellDescriptor = j.getDescriptorByType(Shell.DescriptorImpl.class);
                         commandLine =

@@ -82,7 +82,7 @@ public class PromotionTrigger extends Trigger<AbstractProject> {
             if (StringUtils.isNotBlank(value)) {
                 Jenkins j = Jenkins.getInstance();
                 if (j == null) {
-                    throw new IllegalStateException(); // TODO 1.590+ getActiveInstance
+                    throw new IllegalStateException("Jenkins has not started, or is shutting down"); // TODO 1.590+ getActiveInstance
                 }
                 LiterateMultibranchProject p = j.getItem(value, project, LiterateMultibranchProject.class);
                 if (p == null) {
@@ -100,7 +100,7 @@ public class PromotionTrigger extends Trigger<AbstractProject> {
             AutoCompletionCandidates candidates = new AutoCompletionCandidates();
             Jenkins j = Jenkins.getInstance();
             if (j == null) {
-                throw new IllegalStateException(); // TODO 1.590+ getActiveInstance
+                throw new IllegalStateException("Jenkins has not started, or is shutting down"); // TODO 1.590+ getActiveInstance
             }
             List<AbstractProject> jobs = j.getItems(AbstractProject.class);
             for (AbstractProject job : jobs) {
@@ -124,7 +124,7 @@ public class PromotionTrigger extends Trigger<AbstractProject> {
             if (jobName != null) {
                 Jenkins jenkins = Jenkins.getInstance();
                 if (jenkins == null) {
-                    throw new IllegalStateException(); // TODO 1.590+ getActiveInstance
+                    throw new IllegalStateException("Jenkins has not started, or is shutting down"); // TODO 1.590+ getActiveInstance
                 }
                 j = jenkins.getItem(jobName, defaultJob, LiterateMultibranchProject.class);
             }
@@ -150,7 +150,7 @@ public class PromotionTrigger extends Trigger<AbstractProject> {
             if (jobName != null) {
                 Jenkins jenkins = Jenkins.getInstance();
                 if (jenkins == null) {
-                    throw new IllegalStateException(); // TODO 1.590+ getActiveInstance
+                    throw new IllegalStateException("Jenkins has not started, or is shutting down"); // TODO 1.590+ getActiveInstance
                 }
                 j = jenkins.getItem(jobName, defaultJob, LiterateMultibranchProject.class);
             }

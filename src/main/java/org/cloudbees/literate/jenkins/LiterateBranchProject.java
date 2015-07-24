@@ -231,7 +231,7 @@ public class LiterateBranchProject extends Project<LiterateBranchProject, Litera
     public SCMCheckoutStrategy getScmCheckoutStrategy() {
         Jenkins j = Jenkins.getInstance();
         if (j == null) {
-            throw new IllegalStateException(); // TODO 1.590+ getActiveInstance
+            throw new IllegalStateException("Jenkins has not started, or is shutting down"); // TODO 1.590+ getActiveInstance
         }
         return j.getDescriptorByType(SCMCheckoutStrategyImpl.DescriptorImpl.class).getInstance();
     }
@@ -647,7 +647,7 @@ public class LiterateBranchProject extends Project<LiterateBranchProject, Litera
     @Override public TopLevelItemDescriptor getDescriptor() {
         Jenkins j = Jenkins.getInstance();
         if (j == null) {
-            throw new IllegalStateException(); // TODO 1.590+ getActiveInstance
+            throw new IllegalStateException("Jenkins has not started, or is shutting down"); // TODO 1.590+ getActiveInstance
         }
         return (TopLevelItemDescriptor) j.getDescriptorOrDie(LiterateBranchProject.class);
     }
