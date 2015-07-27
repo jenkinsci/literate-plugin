@@ -76,7 +76,7 @@ public abstract class Agent<P extends Publisher> implements ExtensionPoint {
      */
     @CheckForNull
     public abstract P getPublisher(@NonNull BuildListener listener, @NonNull FilePath configurationFile)
-            throws IOException;
+            throws IOException, InterruptedException;
 
     /**
      * In the event that there are multiple {@link Agent} extensions for the same {@link Publisher} and more than

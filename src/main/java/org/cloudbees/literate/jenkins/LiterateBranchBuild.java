@@ -44,7 +44,6 @@ import hudson.slaves.WorkspaceList;
 import hudson.util.HttpResponses;
 import hudson.util.IOUtils;
 import jenkins.branch.BranchProperty;
-import jenkins.model.Jenkins;
 import org.apache.commons.lang.StringUtils;
 import org.cloudbees.literate.api.v1.ExecutionEnvironment;
 import org.cloudbees.literate.api.v1.Parameter;
@@ -335,7 +334,7 @@ public class LiterateBranchBuild extends Build<LiterateBranchProject, LiterateBr
                 return r;
             } finally {
                 // if the build was aborted in the middle, cancel all the child builds
-                Queue q = Jenkins.getInstance().getQueue();
+                Queue q = Queue.getInstance();
                 synchronized (q) {// avoid micro-locking on Queue#cancel
                     final int n = getNumber();
                     for (LiterateEnvironmentProject c : configurations) {
@@ -394,10 +393,12 @@ public class LiterateBranchBuild extends Build<LiterateBranchProject, LiterateBr
         @Override
         protected WorkspaceList.Lease decideWorkspace(Node n, WorkspaceList wsl)
                 throws InterruptedException, IOException {
-            // TODO: this cast is indicative of abstraction problem
-            LiterateBranchProject project = (LiterateBranchProject) getProject();
-            return wsl.allocate(n.getWorkspaceFor(project.getParent())
-                    .child(project.getBranch().getName()));
+            LiterateBranchProject project = getProject();
+            FilePath workspace = n.getWorkspaceFor(project.getParent());
+            if (workspace == null) {
+                throw new IOException("offline node " + n);
+            }
+            return wsl.allocate(workspace.child(project.getBranch().getName()));
         }
 
         /**

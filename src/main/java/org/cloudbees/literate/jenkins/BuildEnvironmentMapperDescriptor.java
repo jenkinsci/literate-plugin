@@ -23,9 +23,9 @@
  */
 package org.cloudbees.literate.jenkins;
 
-import hudson.DescriptorExtensionList;
+import hudson.ExtensionList;
 import hudson.model.Descriptor;
-import jenkins.model.Jenkins;
+import java.util.List;
 
 /**
  * The {@link Descriptor} for {@link BuildEnvironmentMapper}.
@@ -39,7 +39,7 @@ public abstract class BuildEnvironmentMapperDescriptor extends Descriptor<BuildE
      *
      * @return all the {@link BuildEnvironmentMapperDescriptor} instances.
      */
-    public static DescriptorExtensionList<BuildEnvironmentMapper, BuildEnvironmentMapperDescriptor> all() {
-        return Jenkins.getInstance().getDescriptorList(BuildEnvironmentMapper.class);
+    public static List<BuildEnvironmentMapperDescriptor> all() {
+        return ExtensionList.lookup(BuildEnvironmentMapperDescriptor.class);
     }
 }

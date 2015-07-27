@@ -26,6 +26,12 @@ package org.cloudbees.literate.jenkins.promotions;
 import edu.umd.cs.findbugs.annotations.NonNull;
 import hudson.Extension;
 import hudson.model.JobProperty;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collections;
+import java.util.Iterator;
+import java.util.List;
+import java.util.logging.Logger;
 import jenkins.branch.BranchPropertyDescriptor;
 import jenkins.branch.MultiBranchProjectDescriptor;
 import jenkins.branch.ProjectDecorator;
@@ -34,14 +40,8 @@ import org.cloudbees.literate.api.v1.ProjectModelRequest;
 import org.cloudbees.literate.jenkins.LiterateBranchBuild;
 import org.cloudbees.literate.jenkins.LiterateBranchProject;
 import org.cloudbees.literate.jenkins.LiterateBranchProperty;
+import org.cloudbees.literate.jenkins.LiterateMultibranchProject;
 import org.kohsuke.stapler.DataBoundConstructor;
-
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Collections;
-import java.util.Iterator;
-import java.util.List;
-import java.util.logging.Logger;
 
 /**
  * A property that describes the promotion processes that are associated with the branch.
@@ -104,7 +104,7 @@ public class PromotionBranchProperty extends LiterateBranchProperty {
 
         @Override
         protected boolean isApplicable(@NonNull MultiBranchProjectDescriptor projectDescriptor) {
-            return LiterateBranchProject.class.isAssignableFrom(projectDescriptor.getClazz());
+            return LiterateMultibranchProject.class.isAssignableFrom(projectDescriptor.getClazz());
         }
 
         @Override

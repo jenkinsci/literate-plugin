@@ -43,7 +43,11 @@ public class ParentLiterateBranchBuildAction extends InvisibleAction implements 
      * Default constructor to be called from the parent build only
      */
     public ParentLiterateBranchBuildAction() {
-        parent = (LiterateBranchBuild) Executor.currentExecutor().getCurrentExecutable();
+        Executor exec = Executor.currentExecutor();
+        if (exec == null) {
+            throw new IllegalStateException("not on an executor thread");
+        }
+        parent = (LiterateBranchBuild) exec.getCurrentExecutable();
     }
 
     /**

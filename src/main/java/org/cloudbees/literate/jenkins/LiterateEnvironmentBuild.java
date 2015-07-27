@@ -25,6 +25,7 @@ package org.cloudbees.literate.jenkins;
 
 import hudson.AbortException;
 import hudson.EnvVars;
+import hudson.ExtensionList;
 import hudson.FilePath;
 import hudson.Launcher;
 import hudson.Util;
@@ -38,7 +39,6 @@ import hudson.model.Result;
 import hudson.slaves.WorkspaceList;
 import hudson.tasks.Publisher;
 import hudson.tools.ToolInstallation;
-import jenkins.model.Jenkins;
 import org.apache.commons.lang.StringUtils;
 import org.cloudbees.literate.api.v1.ExecutionEnvironment;
 import org.cloudbees.literate.api.v1.ProjectModel;
@@ -202,7 +202,7 @@ public class LiterateEnvironmentBuild extends Build<LiterateEnvironmentProject, 
             ProjectModel model = projectModelAction.getModel();
             Map<Class<? extends Publisher>, List<Agent<? extends Publisher>>> agents = new LinkedHashMap<Class<?
                     extends Publisher>, List<Agent<? extends Publisher>>>();
-            for (Agent agent : Jenkins.getInstance().getExtensionList(Agent.class)) {
+            for (Agent agent : ExtensionList.lookup(Agent.class)) {
                 Class clazz = agent.getPublisherClass();
                 List<Agent<? extends Publisher>> list = agents.get(clazz);
                 if (list == null) {
@@ -329,10 +329,12 @@ public class LiterateEnvironmentBuild extends Build<LiterateEnvironmentProject, 
         @Override
         protected WorkspaceList.Lease decideWorkspace(Node n, WorkspaceList wsl)
                 throws InterruptedException, IOException {
-            // TODO: this cast is indicative of abstraction problem
-            LiterateEnvironmentProject project = (LiterateEnvironmentProject) getProject();
-            return wsl.allocate(n.getWorkspaceFor(project.getParent().getParent())
-                    .child(project.getParent().getBranch().getName() + "-" + project.getEnvironment().getName()));
+            LiterateEnvironmentProject project = getProject();
+            FilePath workspace = n.getWorkspaceFor(project.getParent().getParent());
+            if (workspace == null) {
+                throw new IOException("offline node " + n);
+            }
+            return wsl.allocate(workspace.child(project.getParent().getBranch().getName() + "-" + project.getEnvironment().getName()));
         }
 
     }

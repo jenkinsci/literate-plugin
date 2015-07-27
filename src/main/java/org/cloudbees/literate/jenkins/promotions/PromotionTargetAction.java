@@ -52,8 +52,12 @@ public class PromotionTargetAction extends InvisibleAction implements BuildBadge
     }
 
     public LiterateBranchBuild resolve() {
+        Jenkins jenkins = Jenkins.getInstance();
+        if (jenkins == null) {
+            return null;
+        }
         LiterateMultibranchProject j =
-                Jenkins.getInstance().getItemByFullName(jobName, LiterateMultibranchProject.class);
+                jenkins.getItemByFullName(jobName, LiterateMultibranchProject.class);
         if (j == null) {
             return null;
         }
