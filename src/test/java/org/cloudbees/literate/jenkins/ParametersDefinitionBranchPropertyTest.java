@@ -41,9 +41,11 @@ import org.jvnet.hudson.test.JenkinsRule;
 
 public class ParametersDefinitionBranchPropertyTest {
 
-    @Rule public JenkinsRule r = new JenkinsRule();
+    @Rule
+    public JenkinsRule r = new JenkinsRule();
 
-    @Test public void propertyVisible() throws Exception {
+    @Test
+    public void propertyVisible() throws Exception {
         LiterateMultibranchProject p = r.jenkins.createProject(LiterateMultibranchProject.class, "p");
         Set<Class<? extends BranchProperty>> clazzes = new HashSet<Class<? extends BranchProperty>>();
         for (BranchPropertyDescriptor d : DescriptorVisibilityFilter.apply(p, BranchPropertyDescriptor.all())) {

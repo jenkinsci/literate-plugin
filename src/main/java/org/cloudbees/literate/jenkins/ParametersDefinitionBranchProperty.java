@@ -37,9 +37,11 @@ import org.kohsuke.stapler.DataBoundConstructor;
  */
 public class ParametersDefinitionBranchProperty extends ParameterDefinitionBranchProperty {
 
-    @DataBoundConstructor public ParametersDefinitionBranchProperty() {}
+    @DataBoundConstructor
+    public ParametersDefinitionBranchProperty() {}
 
-    @Override protected <P extends Job<P, B>, B extends Run<P, B>> boolean isApplicable(Class<P> clazz) {
+    @Override
+    protected <P extends Job<P, B>, B extends Run<P, B>> boolean isApplicable(Class<P> clazz) {
         return LiterateBranchProject.class.isAssignableFrom(clazz);
     }
 

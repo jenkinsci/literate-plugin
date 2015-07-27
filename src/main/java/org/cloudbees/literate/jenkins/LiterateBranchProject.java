@@ -644,7 +644,8 @@ public class LiterateBranchProject extends Project<LiterateBranchProject, Litera
      * {@inheritDoc}
      */
     // TODO - Hack - child items of an item group that is a view container must to implement TopLevelItem
-    @Override public TopLevelItemDescriptor getDescriptor() {
+    @Override
+    public TopLevelItemDescriptor getDescriptor() {
         Jenkins j = Jenkins.getInstance();
         if (j == null) {
             throw new IllegalStateException("Jenkins has not started, or is shutting down"); // TODO 1.590+ getActiveInstance
