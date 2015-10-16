@@ -65,7 +65,10 @@ public class PromotionTrigger extends Trigger<AbstractProject> {
     public static class DescriptorImpl extends TriggerDescriptor {
         @Override
         public boolean isApplicable(Item item) {
-            return true;
+            return false;
+            /* TODO when PromotionBuild.RunnerImpl.post2 uses me:
+            return item instanceof AbstractProject;
+            */
         }
 
         @Override
