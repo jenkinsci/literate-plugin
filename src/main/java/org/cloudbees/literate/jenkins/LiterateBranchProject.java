@@ -129,7 +129,7 @@ public class LiterateBranchProject extends Project<LiterateBranchProject, Litera
      * @param branch the branch.
      */
     public LiterateBranchProject(@NonNull LiterateMultibranchProject parent, @NonNull Branch branch) {
-        super(parent, branch.getName());
+        super(parent, branch.getEncodedName());
         this.branch = branch;
     }
 
@@ -202,15 +202,6 @@ public class LiterateBranchProject extends Project<LiterateBranchProject, Litera
         }
     }
 
-
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    @NonNull
-    public synchronized String getName() {
-        return branch.getName();
-    }
 
     /**
      * {@inheritDoc}
