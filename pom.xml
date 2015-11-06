@@ -29,7 +29,7 @@
   <parent>
     <groupId>org.jenkins-ci.plugins</groupId>
     <artifactId>plugin</artifactId>
-    <version>1.580.3</version> <!-- to match branch-api -->
+    <version>1.609.1</version> <!-- to match branch-api -->
   </parent>
 
   <artifactId>literate</artifactId>
@@ -118,7 +118,7 @@
     <dependency>
       <groupId>org.jenkins-ci.plugins</groupId>
       <artifactId>branch-api</artifactId>
-      <version>0.2-beta-4</version>
+      <version>0.2-beta-7-SNAPSHOT</version>
     </dependency>
     <dependency>
       <groupId>org.jenkins-ci.plugins</groupId>
