@@ -641,7 +641,7 @@ public class LiterateBranchProject extends Project<LiterateBranchProject, Litera
         if (j == null) {
             throw new IllegalStateException("Jenkins has not started, or is shutting down"); // TODO 1.590+ getActiveInstance
         }
-        return (TopLevelItemDescriptor) j.getDescriptorOrDie(LiterateBranchProject.class);
+        return (TopLevelItemDescriptor) j.getDescriptor(LiterateBranchProject.class);
     }
 
     /**
